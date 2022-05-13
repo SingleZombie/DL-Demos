@@ -60,7 +60,7 @@ def predict(W, b, X):
 
 
 def loss(y_hat, y):
-    return np.sum(-(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat)))
+    return np.mean(-(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat)))
 
 
 def train_step(W, b, X, Y, lr):
@@ -105,7 +105,7 @@ def main():
     print(f'Training set size: {train_X.shape[1]}')
     print(f'Test set size: {test_X.shape[1]}')
 
-    W, b = train(train_X, train_Y, learning_rate=0.0001)
+    W, b = train(train_X, train_Y, learning_rate=0.0002)
 
     test(W, b, test_X, test_Y)
 
