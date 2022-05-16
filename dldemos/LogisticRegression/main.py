@@ -99,14 +99,14 @@ def main():
     test_X = [resize_input(x) for x in test_X]
     train_X = np.array(train_X).T
     train_Y = np.array(train_Y)
-    train_Y.reshape(-1, 1)
+    train_Y = train_Y.reshape((1, -1))
     test_X = np.array(test_X).T
     test_Y = np.array(test_Y)
-    test_Y.reshape(-1, 1)
+    test_Y = test_Y.reshape((1, -1))
     print(f'Training set size: {train_X.shape[1]}')
     print(f'Test set size: {test_X.shape[1]}')
 
-    w, b = train(train_X, train_Y, 10000, learning_rate=0.0002)
+    w, b = train(train_X, train_Y, learning_rate=0.0002)
 
     test(w, b, test_X, test_Y)
 
