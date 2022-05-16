@@ -46,46 +46,47 @@ def resize_input(a: np.ndarray):
 
 
 def init_weights(n_x=224 * 224 * 3):
-    W = np.zeros((n_x, 1))
+    w = np.zeros((n_x, 1))
     b = 0.0
-    return W, b
+    return w, b
 
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
-def predict(W, b, X):
-    return sigmoid(np.dot(W.T, X) + b)
+def predict(w, b, X):
+    return sigmoid(np.dot(w.T, X) + b)
 
 
 def loss(y_hat, y):
     return np.mean(-(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat)))
 
 
-def train_step(W, b, X, Y, lr):
-    Z = np.dot(W.T, X) + b
+def train_step(w, b, X, Y, lr):
+    m = X.shape[1]
+    Z = np.dot(w.T, X) + b
     A = sigmoid(Z)
     d_Z = A - Y
-    d_W = np.mean(X * d_Z, 1, keepdims=True)
-    d_b = np.sum(d_Z)
-    return W - lr * d_W, b - lr * d_b
+    d_w = np.dot(X, d_Z.T) / m
+    d_b = np.mean(d_Z)
+    return w - lr * d_w, b - lr * d_b
 
 
 def train(train_X, train_Y, step=1000, learning_rate=0.00001):
-    W, b = init_weights()
+    w, b = init_weights()
     print(f'learning rate: {learning_rate}')
     for i in range(step):
-        W, b = train_step(W, b, train_X, train_Y, learning_rate)
+        w, b = train_step(w, b, train_X, train_Y, learning_rate)
         if i % 10 == 0:
-            y_hat = predict(W, b, train_X)
+            y_hat = predict(w, b, train_X)
             ls = loss(y_hat, train_Y)
             print(f'step {i} loss: {ls}')
-    return W, b
+    return w, b
 
 
-def test(W, b, test_X, test_Y):
-    y_hat = predict(W, b, test_X)
+def test(w, b, test_X, test_Y):
+    y_hat = predict(w, b, test_X)
     predicts = np.where(y_hat > 0.5, 1, 0)
     score = np.mean(np.where(predicts == test_Y, 1, 0))
     print(f'Accuracy: {score}')
@@ -105,9 +106,9 @@ def main():
     print(f'Training set size: {train_X.shape[1]}')
     print(f'Test set size: {test_X.shape[1]}')
 
-    W, b = train(train_X, train_Y, learning_rate=0.0002)
+    w, b = train(train_X, train_Y, 10000, learning_rate=0.0002)
 
-    test(W, b, test_X, test_Y)
+    test(w, b, test_X, test_Y)
 
 
 if __name__ == '__main__':
