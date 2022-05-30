@@ -13,4 +13,4 @@
                 ├─cats
                 └─dogs
 ```
-2. Run `python main.py` on `./LogisticRegression` directory.
+2. Run `python main.py` on `./LogisticRegression` directory (Or modify the data path in the `main.py`).

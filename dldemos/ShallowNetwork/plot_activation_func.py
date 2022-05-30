@@ -47,4 +47,5 @@ plt.axhline(y=0, color='k')
 plt.axvline(x=0, color='k')
 plt.plot(x, y4)
 plt.title('leaky_relu')
+
 plt.show()
