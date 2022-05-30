@@ -6,7 +6,7 @@
 git clone https://github.com/SingleZombie/DL-Demos.git
 ```
 
-2. Run install
+2. Run the installation command:
 ```shell
 python setup.py develop
 ```
@@ -15,3 +15,4 @@ python setup.py develop
 Demos for deep learning.
 1. Logistic Regression
 2. Shallow Nerual Network
+3. Deep Nerual Network (MLP)
