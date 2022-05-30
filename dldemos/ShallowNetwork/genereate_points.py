@@ -20,12 +20,12 @@ def half_oval(cnt, h=10, w=20):
 
 def generate_point_set():
     petal1 = half_oval(20)
-    petal2 = np.dot(vertical_flip(), half_oval(20).T).T
+    petal2 = np.dot(half_oval(20), vertical_flip().T)
     petal = np.concatenate((petal1, petal2), 0)
     petal += [25, 0]
     flower = petal.copy()
     for i in range(5):
-        new_petal = np.dot(rotate(np.radians(60) * (i + 1)), petal.copy().T).T
+        new_petal = np.dot(petal.copy(), rotate(np.radians(60) * (i + 1)).T)
         flower = np.concatenate((flower, new_petal), 0)
 
     label = np.zeros([40 * 6])
