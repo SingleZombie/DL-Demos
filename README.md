@@ -13,6 +13,13 @@ python setup.py develop
 # Description
 
 Demos for deep learning.
+
+## Andrew Ng Deep Learning Specialization
 1. Logistic Regression
 2. Shallow Nerual Network
 3. Deep Nerual Network (MLP)
+4. Parameter Initialization
+5. Regularization
+
+## Others
+1. Style Transfer
