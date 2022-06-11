@@ -31,6 +31,7 @@ def save_image(tensor, image_path):
 # Hyperparameters
 style_img = read_image('dldemos/StyleTransfer/picasso.jpg')
 content_img = read_image('dldemos/StyleTransfer/dancing.jpg')
+
 default_content_layers = ['conv_4']
 default_style_layers = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
 style_weight = 1e4
@@ -47,7 +48,7 @@ class ContentLoss(torch.nn.Module):
         return input
 
 
-def grim(x: torch.Tensor):
+def gram(x: torch.Tensor):
     # x is a [n, c, h, w] array
     n, c, h, w = x.shape
 
@@ -59,10 +60,10 @@ def grim(x: torch.Tensor):
 class StyleLoss(torch.nn.Module):
     def __init__(self, target: torch.Tensor):
         super().__init__()
-        self.target = grim(target.detach()).detach()
+        self.target = gram(target.detach()).detach()
 
     def forward(self, input):
-        G = grim(input)
+        G = gram(input)
         self.loss = F.mse_loss(G, self.target)
         return input
 
