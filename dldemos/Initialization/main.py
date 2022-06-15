@@ -2,9 +2,11 @@ import abc
 from typing import List
 
 import numpy as np
-from points_classification import (generate_plot_set, generate_points,
-                                   plot_points, visualize)
 
+from dldemos.Initialization.points_classification import (generate_plot_set,
+                                                          generate_points,
+                                                          plot_points,
+                                                          visualize)
 from dldemos.utils import get_activation_de_func, get_activation_func, sigmoid
 
 

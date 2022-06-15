@@ -1,6 +1,9 @@
 import numpy as np
-from genereate_points import generate_plot_set, generate_point_set, visualize
 from model import LogisticRegression, ShallowNetwork, train_model
+
+from dldemos.ShallowNetwork.genereate_points import (generate_plot_set,
+                                                     generate_point_set,
+                                                     visualize)
 
 
 def main():

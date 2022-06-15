@@ -20,6 +20,7 @@ Demos for deep learning.
 3. Deep Nerual Network (MLP)
 4. Parameter Initialization
 5. Regularization
+6. Advanded Optimizer
 
 ## Others
 1. Style Transfer
