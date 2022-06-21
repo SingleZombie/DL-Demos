@@ -20,7 +20,7 @@ Demos for deep learning.
 3. Deep Nerual Network (MLP)
 4. Parameter Initialization
 5. Regularization
-6. Advanded Optimizer
-
+6. Advanced Optimizer (mini-batch, momentum, Adam)
+7. Multiclass Classification with TensorFlow
 ## Others
-1. Style Transfer
+1. Style Transfer with PyTorch
