@@ -36,7 +36,7 @@ class MulticlassClassificationNet():
         return A
 
     def loss(self, Y, Y_hat):
-        return self.loss_fn(Y_hat.T, Y.T)
+        return self.loss_fn(Y_hat.T, Y)
 
     def evaluate(self, X, Y, return_loss=False):
         Y_hat = self.forward(X)
