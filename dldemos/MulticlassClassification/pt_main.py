@@ -86,7 +86,7 @@ def main():
     print(train_Y_pt.shape)
 
     # X: [2, m]
-    # Y: [3, m]
+    # Y: [m]
 
     n_x = 2
     neuron_list = [n_x, 10, 10, 3]
