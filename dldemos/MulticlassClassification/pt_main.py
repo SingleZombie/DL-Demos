@@ -36,7 +36,7 @@ class MulticlassClassificationNet():
         return A
 
     def loss(self, Y, Y_hat):
-        return self.loss_fn(Y_hat.T, Y.T)
+        return self.loss_fn(Y_hat.T, Y)
 
     def evaluate(self, X, Y, return_loss=False):
         Y_hat = self.forward(X)
@@ -86,7 +86,7 @@ def main():
     print(train_Y_pt.shape)
 
     # X: [2, m]
-    # Y: [3, m]
+    # Y: [m]
 
     n_x = 2
     neuron_list = [n_x, 10, 10, 3]
