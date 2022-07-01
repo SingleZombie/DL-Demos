@@ -1,4 +1,4 @@
-# Install
+# Installation
 
 1. Clone the git repo:
 
@@ -14,6 +14,8 @@ python setup.py develop
 
 Demos for deep learning.
 
+# Project
+
 ## Andrew Ng Deep Learning Specialization
 1. Logistic Regression
 2. Shallow Nerual Network
@@ -21,6 +23,6 @@ Demos for deep learning.
 4. Parameter Initialization
 5. Regularization
 6. Advanced Optimizer (mini-batch, momentum, Adam)
-7. Multiclass Classification with TensorFlow
+7. Multiclass Classification with TensorFlow and PyTorch
 ## Others
 1. Style Transfer with PyTorch
