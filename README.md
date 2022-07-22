@@ -24,5 +24,8 @@ Demos for deep learning.
 5. Regularization
 6. Advanced Optimizer (mini-batch, momentum, Adam)
 7. Multiclass Classification with TensorFlow and PyTorch
+8. NumPy Convolution 2D
+9. Basic CNN
+10. ResNet
 ## Others
 1. Style Transfer with PyTorch

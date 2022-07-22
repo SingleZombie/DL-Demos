@@ -59,8 +59,10 @@ def convolution_block_3(x, f, filters1, filters2, s: int, use_shortcut=True):
     x = layers.Conv2D(filters2, 1, padding='valid')(x)
     x = layers.BatchNormalization(axis=3)(x)
     if use_shortcut:
-        x_shortcut = layers.Conv2D(filters2, 1, strides=(s, s),
-                                   padding='same')(x_shortcut)
+        x_shortcut = layers.Conv2D(filters2,
+                                   1,
+                                   strides=(s, s),
+                                   padding='valid')(x_shortcut)
         x_shortcut = layers.BatchNormalization(axis=3)(x_shortcut)
         x = x + x_shortcut
     x = layers.ReLU()(x)
