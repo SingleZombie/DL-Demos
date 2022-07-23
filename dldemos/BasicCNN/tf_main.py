@@ -34,7 +34,7 @@ def main():
     train_X, train_Y, test_X, test_Y = get_cat_set(
         'dldemos/LogisticRegression/data/archive/dataset', train_size=1500)
     print(train_X.shape)  # (m, 224, 224, 3)
-    print(train_Y.shape)  # (m , 1)
+    print(train_Y.shape)  # (m, 1)
 
     model = init_model()
     model.compile(optimizer='adam',

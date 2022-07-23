@@ -29,4 +29,6 @@ train_X, train_Y, test_X, test_Y = get_cat_set(
 
 Replace 'dldemos/LogisticRegression/data/archive/dataset' with your path.
 
-4. Run `tf_main.py`.
+4. Run `tf_main.py` or `pt_main.py`.
+
+The NumPy implementation of convolution is in `np_conv` and `np_conv_backward`
