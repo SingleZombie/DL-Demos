@@ -12,23 +12,23 @@ def draw_bbox(img: Image.Image,
     x1, y1, x2, y2 = bbox
     font = font = ImageFont.truetype(
         'arial.ttf',
-        15,
+        12,
     )
 
     img_draw.rectangle((x1 - 2, y1 - 2, x2 + 2, y2 + 2),
                        outline=rect_color,
                        width=2)
 
-    # Show probablity of top left corner
-    tw, th = font.getsize(str(prob))
-    img_draw.rectangle((x1, y1, x1 + tw, y1 + th), fill='black')
-    img_draw.text((x1, y1), str(prob), font=font)
-
     # Show class label on the top right corner
     if text is not None:
         tw, th = font.getsize(text)
         img_draw.rectangle((x2 - tw, y1, x2, y1 + th), fill='black')
         img_draw.text((x2, y1), text, font=font, anchor='rt')
+
+    # Show probablity of top left corner
+    tw, th = font.getsize(f'{prob:.2f}')
+    img_draw.rectangle((x1, y1, x1 + tw, y1 + th), fill='black')
+    img_draw.text((x1, y1), f'{prob:.2f}', font=font)
 
 
 def main():
