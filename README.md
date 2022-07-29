@@ -27,5 +27,6 @@ Demos for deep learning.
 8. NumPy Convolution 2D
 9. Basic CNN
 10. ResNet
+11. NMS
 ## Others
 1. Style Transfer with PyTorch
