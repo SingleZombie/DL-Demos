@@ -7,13 +7,17 @@ def draw_bbox(img: Image.Image,
               bbox: Tuple[float, float, float, float],
               prob: float,
               rect_color: Tuple[int, int, int] = (255, 0, 0),
-              text: Optional[str] = None):
+              text: Optional[str] = None,
+              better_font: Optional[str] = None):
     img_draw = ImageDraw.Draw(img, 'RGBA')
     x1, y1, x2, y2 = bbox
-    font = font = ImageFont.truetype(
-        'arial.ttf',
-        12,
-    )
+    if better_font is not None:
+        font = ImageFont.truetype(
+            better_font,
+            12,
+        )
+    else:
+        font = ImageFont.load_default()
 
     img_draw.rectangle((x1 - 2, y1 - 2, x2 + 2, y2 + 2),
                        outline=rect_color,
@@ -23,7 +27,7 @@ def draw_bbox(img: Image.Image,
     if text is not None:
         tw, th = font.getsize(text)
         img_draw.rectangle((x2 - tw, y1, x2, y1 + th), fill='black')
-        img_draw.text((x2, y1), text, font=font, anchor='rt')
+        img_draw.text((x2 - tw, y1), text, font=font, anchor='rt')
 
     # Show probablity of top left corner
     tw, th = font.getsize(f'{prob:.2f}')
