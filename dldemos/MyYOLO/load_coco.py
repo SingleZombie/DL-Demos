@@ -50,7 +50,7 @@ def show_img_ann(img_info):
 
 
 def main():
-    # print_json()
+    print_json()
     img_dict = load_img_ann()
     keys = list(img_dict.keys())
     show_img_ann(img_dict[keys[1]])
