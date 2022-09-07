@@ -2,7 +2,6 @@ import torch
 from torchtext.vocab import GloVe
 
 glove = GloVe(name='6B', dim=100)
-glove.size
 
 # Get vectors
 tensor = glove.get_vecs_by_tokens(['', '1998', '199999998', ',', 'cat'], True)
@@ -32,6 +31,6 @@ def get_counterpart(x1, y1, x2):
     return myvocab[max_id]
 
 
-# print(get_counterpart('man', 'woman', 'king'))
-# print(get_counterpart('more', 'less', 'long'))
-# print(get_counterpart('apple', 'red', 'banana'))
+print(get_counterpart('man', 'woman', 'king'))
+print(get_counterpart('more', 'less', 'long'))
+print(get_counterpart('apple', 'red', 'banana'))
