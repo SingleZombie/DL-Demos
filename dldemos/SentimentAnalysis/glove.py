@@ -1,5 +1,5 @@
-from torchtext.vocab import GloVe
 import torch
+from torchtext.vocab import GloVe
 
 glove = GloVe(name='6B', dim=100)
 glove.size

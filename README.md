@@ -28,5 +28,8 @@ Demos for deep learning.
 9. Basic CNN
 10. ResNet
 11. NMS
+12. My YOLO model *(work in progress)*
+13. Letter level language model with PyTorch
+14. Sentiment analysis using Glove with PyTorch
 ## Others
 1. Style Transfer with PyTorch

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
 from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import DataLoader, Dataset
 from torchtext.data import get_tokenizer
 from torchtext.vocab import GloVe
 
@@ -12,7 +12,6 @@ GLOVE = GloVe(name='6B', dim=GLOVE_DIM)
 
 
 class IMDBDataset(Dataset):
-
     def __init__(self, is_train=True, dir='data/aclImdb'):
         super().__init__()
         self.tokenizer = get_tokenizer('basic_english')
@@ -33,7 +32,6 @@ class IMDBDataset(Dataset):
 
 
 def get_dataloader(dir='data/aclImdb'):
-
     def collate_fn(batch):
         x, y = zip(*batch)
         x_pad = pad_sequence(x, batch_first=True)
@@ -52,7 +50,6 @@ def get_dataloader(dir='data/aclImdb'):
 
 
 class RNN(torch.nn.Module):
-
     def __init__(self, hidden_units=64, dropout_rate=0.5):
         super().__init__()
         self.drop = nn.Dropout(dropout_rate)
