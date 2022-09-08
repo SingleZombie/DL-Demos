@@ -58,7 +58,7 @@ class RNN(torch.nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x: torch.Tensor):
-        # word shape: [batch, max_word_length]
+        # x shape: [batch, max_word_length, embedding_length]
         emb = self.drop(x)
         output, _ = self.rnn(emb)
         output = output[:, -1]
