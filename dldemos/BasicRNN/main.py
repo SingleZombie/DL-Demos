@@ -50,7 +50,7 @@ def onehot_to_word(arr):
 
 
 class WordDataset(Dataset):
-    def __init__(self, words, max_length, is_onehot=True) -> None:
+    def __init__(self, words, max_length, is_onehot=True):
         super().__init__()
         n_words = len(words)
         self.words = words
@@ -201,12 +201,13 @@ def sample(model):
 
 
 def rnn1():
-    rnn1 = train_rnn1()
+    # rnn1 = train_rnn1()
 
     # Or load the models
-    # state_dict = torch.load('dldemos/BasicRNN/rnn1.pth', map_location='cuda')
-    # rnn1 = RNN1().to('cuda')
-    # rnn1.load_state_dict(state_dict)
+    state_dict = torch.load('dldemos/BasicRNN/rnn1_vocab.pth',
+                            map_location='cuda')
+    rnn1 = RNN1().to('cuda')
+    rnn1.load_state_dict(state_dict)
 
     rnn1.eval()
     test_language_model(rnn1)

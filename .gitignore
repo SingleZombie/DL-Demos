@@ -131,3 +131,5 @@ work_dirs/
 /data
 data
 .vector_cache
+
+dldemos/*/*.txt
