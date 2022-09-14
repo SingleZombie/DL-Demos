@@ -1,4 +1,4 @@
-1. Install `bable`, `faker`.
+1. Install `babel`, `faker`.
 
 ```shell
 pip install babel faker
