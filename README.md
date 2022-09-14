@@ -31,5 +31,6 @@ Demos for deep learning.
 12. My YOLO model *(work in progress)*
 13. Letter level language model with PyTorch
 14. Sentiment analysis using Glove with PyTorch
+15. Date translation attention model with PyTorch
 ## Others
 1. Style Transfer with PyTorch
