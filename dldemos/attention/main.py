@@ -88,7 +88,11 @@ class AttentionModel(nn.Module):
             # attention_input: [batch * n_sequence, hidden_s + hidden_a]
             attention_input = torch.cat((repeat_s, a),
                                         2).reshape(batch * n_squence, -1)
-            alpha = self.softmax(self.attention_linear(attention_input))
+            # x: [batch * n_sequence, 1]
+            x = self.attention_linear(attention_input)
+            # x: [batch, n_sequence]
+            x = x.reshape(batch, n_squence)
+            alpha = self.softmax(x)
             c = torch.sum(a * alpha.reshape(batch, n_squence, 1), 1)
             c = c.unsqueeze(1)
             decoder_input = torch.cat((prev_y, c), 2)
@@ -114,8 +118,7 @@ def main():
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     citerion = torch.nn.CrossEntropyLoss()
-    for epoch in range(20):
-
+    for epoch in range(30):
         loss_sum = 0
         dataset_len = len(train_dataloader.dataset)
 
@@ -140,7 +143,7 @@ def main():
     torch.save(model.state_dict(), 'dldemos/attention/model.pth')
 
     # test
-    model.load_state_dict(torch.load('dldemos/attention/model.pth'))
+    # model.load_state_dict(torch.load('dldemos/attention/model.pth'))
 
     accuracy = 0
     dataset_len = len(test_dataloader.dataset)

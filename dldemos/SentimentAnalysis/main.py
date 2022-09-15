@@ -124,12 +124,12 @@ def main():
 
     # Inference
     tokenizer = get_tokenizer('basic_english')
-    article = 'U.S. stock indexes fell Tuesday, driven by expectations for' \
-        'tighter Federal Reserve policy and an energy crisis in Europe.' \
-        'Stocks around the globe have come under pressure in recent weeks' \
-        'as worries about tighter monetary policy in the U.S. and a'\
-        'darkening economic outlook in Europe have led investors to'\
-        'sell riskier assets.',
+    article = 'U.S. stock indexes fell Tuesday, driven by expectations for ' \
+        'tighter Federal Reserve policy and an energy crisis in Europe. ' \
+        'Stocks around the globe have come under pressure in recent weeks ' \
+        'as worries about tighter monetary policy in the U.S. and a '\
+        'darkening economic outlook in Europe have led investors to '\
+        'sell riskier assets.'
 
     x = GLOVE.get_vecs_by_tokens(tokenizer(article)).unsqueeze(0).to(device)
     with torch.no_grad():
