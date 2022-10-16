@@ -114,6 +114,7 @@ def main():
 
     model = AttentionModel().to(device)
 
+    # Please close or open the codes with #
     # train
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -143,7 +144,7 @@ def main():
     torch.save(model.state_dict(), 'dldemos/attention/model.pth')
 
     # test
-    # model.load_state_dict(torch.load('dldemos/attention/model.pth'))
+    model.load_state_dict(torch.load('dldemos/attention/model.pth'))
 
     accuracy = 0
     dataset_len = len(test_dataloader.dataset)

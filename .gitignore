@@ -133,3 +133,5 @@ data
 .vector_cache
 
 dldemos/*/*.txt
+
+nohup.out
