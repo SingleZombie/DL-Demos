@@ -1,14 +1,12 @@
-from dataclasses import dataclass
-from turtle import forward
-import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 import os
+
+import torch
 from PIL import Image
+from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
 
 
 class CelebADataset(Dataset):
-
     def __init__(self, root, img_shape=(64, 64)) -> None:
         super().__init__()
         self.root = root

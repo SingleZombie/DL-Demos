@@ -1,9 +1,11 @@
-from dldemos.VAE.load_celebA import get_dataloader
-from dldemos.VAE.model import VAE
+from time import time
+
 import torch
 import torch.nn.functional as F
 from torchvision.transforms import ToPILImage
-from time import time
+
+from dldemos.VAE.load_celebA import get_dataloader
+from dldemos.VAE.model import VAE
 
 # Hyperparameters
 n_epochs = 10
