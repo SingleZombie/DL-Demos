@@ -1,11 +1,12 @@
 import os
+
 import torch
 import torch.distributed as dist
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data.distributed import DistributedSampler
 from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data import DataLoader, Dataset
+from torch.utils.data.distributed import DistributedSampler
 
 
 def setup():
@@ -17,7 +18,6 @@ def cleanup():
 
 
 class ToyModel(nn.Module):
-
     def __init__(self) -> None:
         super().__init__()
         self.layer = nn.Linear(1, 1)
@@ -27,7 +27,6 @@ class ToyModel(nn.Module):
 
 
 class MyDataset(Dataset):
-
     def __init__(self):
         super().__init__()
         self.data = torch.tensor([1, 2, 3, 4], dtype=torch.float32)
