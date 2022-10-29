@@ -32,6 +32,7 @@ Demos for deep learning.
 13. Letter level language model with PyTorch
 14. Sentiment analysis using Glove with PyTorch
 15. Date translation attention model with PyTorch
-16. VAE with PyTorch
 ## Others
 1. Style Transfer with PyTorch
+2. VAE with PyTorch
+3. PyTorch DDP Demo
