@@ -50,12 +50,21 @@ def get_dataloader(en_tensor: np.ndarray,
                    zh_tensor: np.ndarray,
                    batch_size=16):
 
+    def pad_sequence_and_get_mask(seq):
+        seq_pad = pad_sequence(seq, batch_first=True, padding_value=PAD_ID)
+        n, max_len = seq_pad.shape[0:2]
+        pad_mask = torch.zeros((n, max_len), dtype=torch.bool)
+        for i, sentence in enumerate(seq):
+            pad_begin = len(sentence)
+            pad_mask[i, pad_begin:] = True
+        return seq_pad, pad_mask
+
     def collate_fn(batch):
         x, y = zip(*batch)
-        x_pad = pad_sequence(x, batch_first=True, padding_value=PAD_ID)
-        y_pad = pad_sequence(y, batch_first=True, padding_value=PAD_ID)
+        x_pad, x_pad_mask = pad_sequence_and_get_mask(x)
+        y_pad, y_pad_mask = pad_sequence_and_get_mask(y)
 
-        return x_pad, y_pad
+        return x_pad, y_pad, x_pad_mask, y_pad_mask
 
     dataset = TranslationDataset(en_tensor, zh_tensor)
     dataloader = DataLoader(dataset,
@@ -79,12 +88,14 @@ def test1():
     print(tensor_to_sentence(en_tensors_valid[1], en_vocab, True))
     print(tensor_to_sentence(zh_tensors_valid[1], zh_vocab))
     ds = TranslationDataset(en_tensors_valid, zh_tensors_valid)
-    print(tensor_to_sentence(en_tensors_valid[1], en_vocab, True))
-    print(tensor_to_sentence(zh_tensors_valid[1], zh_vocab))
+    print(tensor_to_sentence(ds[1][0], en_vocab, True))
+    print(tensor_to_sentence(ds[1][1], zh_vocab))
     dl = get_dataloader(en_tensors_valid, zh_tensors_valid)
-    e, z = next(iter(dl))
+    e, z, e_pad, z_pad = next(iter(dl))
     print(tensor_to_sentence(e[0], en_vocab, True))
     print(tensor_to_sentence(z[0], zh_vocab))
+    print(e_pad[0])
+    print(z_pad[0])
 
 
 def test2():
@@ -94,11 +105,11 @@ def test2():
     dataloader_train = get_dataloader(en_train, zh_train)
     dataloader_valid = get_dataloader(en_valid, zh_valid)
 
-    en_batch, zh_batch = next(iter(dataloader_train))
+    en_batch, zh_batch, e_pad, z_pad = next(iter(dataloader_train))
     print(tensor_to_sentence(en_batch[2], en_vocab, True))
     print(tensor_to_sentence(zh_batch[2], zh_vocab, False))
 
-    en_batch, zh_batch = next(iter(dataloader_valid))
+    en_batch, zh_batch, e_pad, z_pad = next(iter(dataloader_valid))
     print(tensor_to_sentence(en_batch[2], en_vocab, True))
     print(tensor_to_sentence(zh_batch[2], zh_vocab, False))
 
@@ -127,6 +138,6 @@ def main():
 
 
 if __name__ == '__main__':
-    # test1()
-    test2()
+    test1()
+    # test2()
     # main()
