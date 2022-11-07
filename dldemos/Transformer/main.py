@@ -4,11 +4,13 @@ import torch.distributed as dist
 import time
 import numpy as np
 
-from dldemos.Transformer.preprocess_data import get_dataloader, load_vocab, load_sentences
+from dldemos.Transformer.preprocess_data import (get_dataloader, load_vocab,
+                                                 load_sentences, PAD_ID)
 from dldemos.Transformer.dataset import tensor_to_sentence
 from dldemos.Transformer.model import Transformer
 
 # Config
+batch_size = 64
 lr = 0.0001
 d_model = 256
 d_ff = 1024
@@ -20,27 +22,32 @@ def main():
     en_vocab, zh_vocab = load_vocab()
 
     en_train, zh_train, en_valid, zh_valid = load_sentences()
-    dataloader_train = get_dataloader(en_train, zh_train)
+    dataloader_train = get_dataloader(en_train, zh_train, batch_size)
     dataloader_valid = get_dataloader(en_valid, zh_valid)
 
     device = 'cuda:0'
 
-    valid_period = 10
+    print_interval = 1000
 
     model = Transformer(len(en_vocab), len(zh_vocab), d_model, d_ff, n_layers,
                         heads)
     model.to(device)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr)
-    citerion = nn.CrossEntropyLoss()
-    tic = time.time()
-    for epoch in range(3):
-        loss_sum = 0
-        dataset_len = len(dataloader_train.dataset)
+    model.init_weights()
 
-        for x, y, x_mask, y_mask in dataloader_train:
-            x, y, x_mask, y_mask = x.to(device), y.to(device), x_mask.to(
-                device), y_mask.to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr)
+    citerion = nn.CrossEntropyLoss(ignore_index=PAD_ID)
+    tic = time.time()
+    cnter = 0
+    dataset_len = len(dataloader_train.dataset)
+    print('Dataset size:', dataset_len)
+    for epoch in range(10):
+        loss_sum = 0
+
+        for x, y in dataloader_train:
+            x, y = x.to(device), y.to(device)
+            x_mask = x == PAD_ID
+            y_mask = y == PAD_ID
             y_input = y[:, :-1]
             y_label = y[:, 1:]
             y_mask = y_mask[:, :-1]
@@ -55,15 +62,23 @@ def main():
             torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
             optimizer.step()
 
-            loss_sum += loss
+            loss_sum += loss.item()
 
-        print(f'{tic // 60}:{ int(tic % 60)}')
+            toc = time.time()
+            interval = toc - tic
+            minutes = int(interval // 60)
+            seconds = int(interval % 60)
+            if cnter % print_interval == 0:
+                print(f'{cnter:08d} {minutes:02d}:{seconds:02d}'
+                      f' loss: {loss.item()}')
+            cnter += 1
 
         print(f'Epoch {epoch}. loss: {loss_sum / dataset_len}')
 
         # if valid_period
 
     torch.save(model.state_dict(), 'dldemos/Transformer/model.pth')
+    print('Done.')
 
 
 if __name__ == '__main__':

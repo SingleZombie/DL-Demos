@@ -64,6 +64,7 @@ def sentence_to_tensor(sentences, vocab):
 
     return np.array(res, dtype=object)
 
+
 def tensor_to_sentence(tensor, mapping, insert_space=False):
     res = ''
     first_word = True
@@ -77,6 +78,7 @@ def tensor_to_sentence(tensor, mapping, insert_space=False):
         res += word
 
     return res
+
 
 def main():
     en_sens, zh_sens = read_file(
@@ -95,10 +97,10 @@ def main():
 
     en_tensors = sentence_to_tensor(en_sens, en_vocab)
     zh_tensors = sentence_to_tensor(zh_sens, zh_vocab)
-    
+
     print(tensor_to_sentence(en_tensors[0], en_vocab, True))
     print(tensor_to_sentence(zh_tensors[0], zh_vocab))
-    
+
     # np.save('data/translation2019zh/en_sentences.npy', en_tensors)
     # np.save('data/translation2019zh/zh_sentences.npy', zh_tensors)
 

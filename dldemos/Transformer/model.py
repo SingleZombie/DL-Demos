@@ -1,8 +1,10 @@
-from typing import Optional, Sequence
+from typing import Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+MY_INF = 1e12
 
 
 class PositionalEncoding(nn.Module):
@@ -45,7 +47,7 @@ def attention(q: torch.Tensor,
     # tmp shape: [n, heads, q_len, k_len]
     tmp = torch.matmul(q, k.transpose(-2, -1)) / d_k**0.5
     if mask is not None:
-        tmp.masked_fill_(mask, -torch.inf)
+        tmp.masked_fill_(mask, -MY_INF)
     tmp = F.softmax(tmp, -1)
     # tmp shape: [n, heads, q_len, d_v]
     tmp = torch.matmul(tmp, v)
@@ -233,13 +235,18 @@ class Transformer(nn.Module):
                  n_layers: int,
                  heads: int,
                  dropout: float = 0.1,
-                 max_seq_len: int = 120):
+                 max_seq_len: int = 200):
         super().__init__()
         self.encoder = Encoder(src_vocab_size, d_model, d_ff, n_layers, heads,
                                dropout, max_seq_len)
         self.decoder = Decoder(dst_vocab_size, d_model, d_ff, n_layers, heads,
                                dropout, max_seq_len)
         self.heads = heads
+
+    def init_weights(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
 
     def generate_mask(self,
                       q_pad: torch.Tensor,
@@ -254,7 +261,7 @@ class Transformer(nn.Module):
 
         mask_shape = (n, self.heads, q_len, k_len)
         if with_left_mask:
-            mask = torch.tril(torch.ones(mask_shape))
+            mask = 1 - torch.tril(torch.ones(mask_shape))
         else:
             mask = torch.zeros(mask_shape)
         mask = mask.to(q_pad.device)
@@ -271,7 +278,7 @@ class Transformer(nn.Module):
                 dst_pad_mask: Optional[torch.Tensor] = None):
         src_mask = self.generate_mask(src_pad_mask, src_pad_mask, False)
         dst_mask = self.generate_mask(dst_pad_mask, dst_pad_mask, True)
-        src_dst_mask = self.generate_mask(dst_pad_mask, src_pad_mask, True)
+        src_dst_mask = self.generate_mask(dst_pad_mask, src_pad_mask, False)
         encoder_kv = self.encoder(x, src_mask)
         res = self.decoder(y, encoder_kv, dst_mask, src_dst_mask)
         embedding_reverse = self.decoder.embedding.weight.transpose(0, 1)
