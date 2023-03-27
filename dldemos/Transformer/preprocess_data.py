@@ -4,6 +4,7 @@ from dldemos.Transformer.dataset import (read_file, create_vocab,
 import numpy as np
 
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.data.distributed import DistributedSampler
 from torch.nn.utils.rnn import pad_sequence
 import torch
 
@@ -49,7 +50,8 @@ class TranslationDataset(Dataset):
 
 def get_dataloader(en_tensor: np.ndarray,
                    zh_tensor: np.ndarray,
-                   batch_size=16):
+                   batch_size=16,
+                   dist_train=False):
 
     def collate_fn(batch):
         x, y = zip(*batch)
@@ -59,12 +61,19 @@ def get_dataloader(en_tensor: np.ndarray,
         return x_pad, y_pad
 
     dataset = TranslationDataset(en_tensor, zh_tensor)
-    dataloader = DataLoader(dataset,
-                            batch_size=batch_size,
-                            shuffle=True,
-                            collate_fn=collate_fn)
-
-    return dataloader
+    if dist_train:
+        sampler = DistributedSampler(dataset)
+        dataloader = DataLoader(dataset,
+                                batch_size=batch_size,
+                                sampler=sampler,
+                                collate_fn=collate_fn)
+        return dataloader, sampler
+    else:
+        dataloader = DataLoader(dataset,
+                                batch_size=batch_size,
+                                shuffle=True,
+                                collate_fn=collate_fn)
+        return dataloader
 
 
 def test1():
