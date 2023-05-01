@@ -1,14 +1,16 @@
+import time
+
+import cv2
+import einops
+import numpy as np
 import torch
 import torch.nn as nn
+
 from dldemos.ddpm.dataset import get_dataloader, get_img_shape
 from dldemos.ddpm.ddpm_simple import DDPM
-from dldemos.ddpm.network import (build_network, convnet_medium_cfg,
-                                  convnet_small_cfg, convnet_big_cfg,
+from dldemos.ddpm.network import (build_network, convnet_big_cfg,
+                                  convnet_medium_cfg, convnet_small_cfg,
                                   unet_1_cfg, unet_res_cfg)
-import time
-import cv2
-import numpy as np
-import einops
 
 batch_size = 512
 n_epochs = 100
@@ -70,10 +72,6 @@ def sample_imgs(ddpm,
         cv2.imwrite(output_path, imgs)
 
 
-# nohup python -u dldemos/ddpm/main.py >> nohup.txt 2>&1 &
-# python -u dldemos/ddpm/main.py
-# hyperparameters
-
 configs = [
     convnet_small_cfg, convnet_medium_cfg, convnet_big_cfg, unet_1_cfg,
     unet_res_cfg
@@ -89,7 +87,7 @@ if __name__ == '__main__':
     net = build_network(config, n_steps)
     ddpm = DDPM(device, n_steps)
 
-    # train(ddpm, net, device=device, ckpt_path=model_path)
+    train(ddpm, net, device=device, ckpt_path=model_path)
 
     net.load_state_dict(torch.load(model_path))
     sample_imgs(ddpm, net, 'work_dirs/diffusion33.jpg', device=device)

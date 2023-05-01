@@ -1,6 +1,6 @@
 import torchvision
-from torchvision.transforms import Compose, ToTensor, Lambda
 from torch.utils.data import DataLoader
+from torchvision.transforms import Compose, Lambda, ToTensor
 
 
 def download_dataset():
