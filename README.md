@@ -10,6 +10,9 @@ git clone https://github.com/SingleZombie/DL-Demos.git
 ```shell
 python setup.py develop
 ```
+
+It is recommended to create a directory named `work_dirs` and put temporary results into it.
+
 # Description
 
 Demos for deep learning.
@@ -32,6 +35,11 @@ Demos for deep learning.
 13. Letter level language model with PyTorch
 14. Sentiment analysis using Glove with PyTorch
 15. Date translation attention model with PyTorch
+
+## Diffusion Models
+
+1. DDPM
+
 ## Others
 1. Style Transfer with PyTorch
 2. VAE with PyTorch
