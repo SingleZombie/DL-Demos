@@ -1,3 +1,4 @@
+import os
 import time
 
 import cv2
@@ -78,6 +79,8 @@ configs = [
 ]
 
 if __name__ == '__main__':
+    os.makedirs('work_dirs', exist_ok=True)
+
     n_steps = 1000
     config_id = 4
     device = 'cuda'
@@ -90,4 +93,4 @@ if __name__ == '__main__':
     train(ddpm, net, device=device, ckpt_path=model_path)
 
     net.load_state_dict(torch.load(model_path))
-    sample_imgs(ddpm, net, 'work_dirs/diffusion33.jpg', device=device)
+    sample_imgs(ddpm, net, 'work_dirs/diffusion.jpg', device=device)
