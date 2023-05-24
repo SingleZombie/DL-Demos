@@ -2,8 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 # Pixel CNN
+
+
 class MaskConv2d(nn.Module):
 
     def __init__(self, conv_type, *args, **kwags):
