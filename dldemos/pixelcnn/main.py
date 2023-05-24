@@ -1,5 +1,5 @@
 from dldemos.pixelcnn.dataset import get_dataloader, get_img_shape
-from dldemos.pixelcnn.model import PixelCNN
+from dldemos.pixelcnn.model import PixelCNN, GatedPixelCNN
 
 import torch
 import torch.nn as nn
@@ -10,9 +10,10 @@ import einops
 import cv2
 
 import numpy as np
+import os
 
 batch_size = 128
-n_class = 4
+color_level = 8
 
 
 def train(model, device, model_path):
@@ -20,15 +21,14 @@ def train(model, device, model_path):
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), 1e-3)
     loss_fn = nn.CrossEntropyLoss()
-    n_epochs = 10
+    n_epochs = 40
     tic = time.time()
     for e in range(n_epochs):
         total_loss = 0
-
         for x, _ in dataloader:
             current_batch_size = x.shape[0]
             x = x.to(device)
-            y = torch.ceil(x * (n_class - 1)).long()
+            y = torch.ceil(x * (color_level - 1)).long()
             y = y.squeeze(1)
             predict_y = model(x)
             loss = loss_fn(predict_y, y)
@@ -55,7 +55,8 @@ def sample(model, device, model_path, output_path, n_sample=81):
             for j in range(W):
                 output = model(x)
                 prob_dist = F.softmax(output[:, :, i, j], -1)
-                pixel = torch.multinomial(prob_dist, 1).float() / (n_class - 1)
+                pixel = torch.multinomial(prob_dist,
+                                          1).float() / (color_level - 1)
                 x[:, :, i, j] = pixel
 
     imgs = x * 255
@@ -69,9 +70,17 @@ def sample(model, device, model_path, output_path, n_sample=81):
     cv2.imwrite(output_path, imgs)
 
 
+models = [
+    PixelCNN(15, 128, 32, True, color_level),
+    GatedPixelCNN(15, 128, 32, True, color_level)
+]
+
 if __name__ == '__main__':
-    model = PixelCNN(64, 32, n_class)
+    os.makedirs('work_dirs', exist_ok=True)
+    model_id = 1
+    model = models[model_id]
     device = 'cuda'
-    model_path = 'dldemos/pixelcnn/model.pth'
-    #train(model, device, model_path)
-    sample(model, device, model_path, 'work_dirs/pixelcnn.jpg')
+    model_path = f'dldemos/pixelcnn/model_{model_id}_{color_level}.pth'
+    train(model, device, model_path)
+    sample(model, device, model_path,
+           f'work_dirs/pixelcnn_{model_id}_{color_level}.jpg')
