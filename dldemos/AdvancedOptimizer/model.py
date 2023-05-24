@@ -11,6 +11,7 @@ from dldemos.utils import get_activation_de_func, get_activation_func
 
 
 class BaseRegressionModel(metaclass=abc.ABCMeta):
+
     def __init__(self):
         pass
 
@@ -49,6 +50,7 @@ class BaseRegressionModel(metaclass=abc.ABCMeta):
 
 
 class DeepNetwork(BaseRegressionModel):
+
     def __init__(self, neuron_cnt: List[int], activation_func: List[str]):
         super().__init__()
         assert len(neuron_cnt) - 1 == len(activation_func)

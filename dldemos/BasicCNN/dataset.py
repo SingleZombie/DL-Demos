@@ -31,11 +31,11 @@ def load_set(data_path: str, cnt: int, img_shape: Tuple[int, int]):
 
 
 def get_cat_set(
-    data_root: str,
-    img_shape: Tuple[int, int] = (224, 224),
-    train_size=1000,
-    test_size=200,
-    format='nhwc'
+        data_root: str,
+        img_shape: Tuple[int, int] = (224, 224),
+        train_size=1000,
+        test_size=200,
+        format='nhwc'
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
 
     train_X = load_set(os.path.join(data_root, 'training_set'), train_size,

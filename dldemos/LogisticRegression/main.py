@@ -7,6 +7,7 @@ import numpy as np
 
 
 def generate_data(dir='data/archive/dataset', input_shape=(224, 224)):
+
     def load_dataset(dir, data_num):
         cat_images = glob(osp.join(dir, 'cats', '*.jpg'))
         dog_images = glob(osp.join(dir, 'dogs', '*.jpg'))

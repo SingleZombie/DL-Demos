@@ -7,6 +7,7 @@ git clone https://github.com/SingleZombie/DL-Demos.git
 ```
 
 2. Run the installation command:
+
 ```shell
 python setup.py develop
 ```
@@ -20,27 +21,30 @@ Demos for deep learning.
 # Project
 
 ## Andrew Ng Deep Learning Specialization
-1. Logistic Regression
-2. Shallow Nerual Network
-3. Deep Nerual Network (MLP)
-4. Parameter Initialization
-5. Regularization
-6. Advanced Optimizer (mini-batch, momentum, Adam)
-7. Multiclass Classification with TensorFlow and PyTorch
-8. NumPy Convolution 2D
-9. Basic CNN
+
+01. Logistic Regression
+02. Shallow Nerual Network
+03. Deep Nerual Network (MLP)
+04. Parameter Initialization
+05. Regularization
+06. Advanced Optimizer (mini-batch, momentum, Adam)
+07. Multiclass Classification with TensorFlow and PyTorch
+08. NumPy Convolution 2D
+09. Basic CNN
 10. ResNet
 11. NMS
-12. My YOLO model *(work in progress)*
+12. ~~My YOLO model~~
 13. Letter level language model with PyTorch
 14. Sentiment analysis using Glove with PyTorch
 15. Date translation attention model with PyTorch
 
-## Diffusion Models
+## Generative Model
 
-1. DDPM
+1. VAE with PyTorch
+2. DDPM with PyTorch
+3. PixelCNN with PyTorch
 
 ## Others
+
 1. Style Transfer with PyTorch
-2. VAE with PyTorch
-3. PyTorch DDP Demo
+2. PyTorch DDP Demo

@@ -31,6 +31,7 @@ def load_img_ann():
 
 def show_img_ann(img_info):
     from PIL import Image
+
     from dldemos.nms.show_bbox import draw_bbox
     print(img_info)
 

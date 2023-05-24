@@ -18,6 +18,7 @@ def itos(arr):
 
 
 class DateDataset(Dataset):
+
     def __init__(self, lines):
         self.lines = lines
 
@@ -31,6 +32,7 @@ class DateDataset(Dataset):
 
 
 def get_dataloader(filename):
+
     def collate_fn(batch):
         x, y = zip(*batch)
         x_pad = pad_sequence(x, batch_first=True)
@@ -43,6 +45,7 @@ def get_dataloader(filename):
 
 
 class AttentionModel(nn.Module):
+
     def __init__(self,
                  embeding_dim=32,
                  encoder_dim=32,

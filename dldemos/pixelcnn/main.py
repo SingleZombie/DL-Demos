@@ -1,18 +1,18 @@
-from dldemos.pixelcnn.dataset import get_dataloader, get_img_shape
-from dldemos.pixelcnn.model import PixelCNN, GatedPixelCNN
+import os
+import time
 
+import cv2
+import einops
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import time
-import einops
-import cv2
-
-import numpy as np
-import os
+from dldemos.pixelcnn.dataset import get_dataloader, get_img_shape
+from dldemos.pixelcnn.model import GatedPixelCNN, PixelCNN
 
 batch_size = 128
+# You can set color_level to any value between 2 and 256
 color_level = 8
 
 

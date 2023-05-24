@@ -38,6 +38,7 @@ class BaseRegressionModel(metaclass=abc.ABCMeta):
 
 
 class LogisticRegression(BaseRegressionModel):
+
     def __init__(self, n_x):
         super().__init__()
         self.n_x = n_x

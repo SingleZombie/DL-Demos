@@ -7,7 +7,7 @@ import torch
 
 def conv2d_forward(input: np.ndarray, weight: np.ndarray, bias: np.ndarray,
                    stride: int, padding: int) -> Dict[str, np.ndarray]:
-    """2D Convolution Forward Implemented with NumPy
+    """2D Convolution Forward Implemented with NumPy.
 
     Args:
         input (np.ndarray): The input NumPy array of shape (H, W, C).
@@ -60,7 +60,7 @@ def conv2d_forward(input: np.ndarray, weight: np.ndarray, bias: np.ndarray,
 
 def conv2d_backward(dZ: np.ndarray, cache: Dict[str, np.ndarray], stride: int,
                     padding: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """2D Convolution Backward Implemented with NumPy
+    """2D Convolution Backward Implemented with NumPy.
 
     Args:
         dZ: (np.ndarray): The derivative of the output of conv.

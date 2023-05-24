@@ -8,6 +8,7 @@ from dldemos.MulticlassClassification.points_classification import (
 
 
 class MulticlassClassificationNet():
+
     def __init__(self, neuron_cnt: List[int]):
         self.num_layer = len(neuron_cnt) - 1
         self.neuron_cnt = neuron_cnt

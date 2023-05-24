@@ -6,6 +6,7 @@ from dldemos.nms.show_bbox import draw_bbox
 
 
 class BoxRenderer():
+
     def __init__(self, img: str, predicts: np.ndarray):
         self.ori_img = Image.open(img)
         self.imgs = []
@@ -56,7 +57,7 @@ def nms_render(predicts: np.ndarray,
                renderer: BoxRenderer,
                score_thresh=0.6,
                iou_thresh=0.3):
-    """Non-Maximum Suppression
+    """Non-Maximum Suppression.
 
     Args:
         predicts (np.ndarray): Tensor of shape [n, 5]. The second demesion
@@ -123,7 +124,7 @@ def nms_render(predicts: np.ndarray,
 def nms(predicts: np.ndarray,
         score_thresh: float = 0.6,
         iou_thresh: float = 0.3):
-    """Non-Maximum Suppression
+    """Non-Maximum Suppression.
 
     Args:
         predicts (np.ndarray): Tensor of shape [n, 5]. The second demesion

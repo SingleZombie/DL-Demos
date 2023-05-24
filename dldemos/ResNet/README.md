@@ -6,7 +6,6 @@ python setup.py develop
 
 2. Download the dataset from https://www.kaggle.com/datasets/fusicfenta/cat-and-dog?resource=download and organize the directory as follows:
 
-
 ```plain text
 └─data
     └─archive

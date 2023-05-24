@@ -10,6 +10,7 @@ def const_lr(learning_rate_zero: float, epoch: int) -> float:
 
 
 def get_hyperbola_func(decay_rate: float) -> Callable[[float, int], float]:
+
     def scheduler(learning_rate_zero: float, epoch: int):
         return learning_rate_zero / (1 + epoch * decay_rate)
 
@@ -17,6 +18,7 @@ def get_hyperbola_func(decay_rate: float) -> Callable[[float, int], float]:
 
 
 class BaseOptimizer(metaclass=abc.ABCMeta):
+
     def __init__(
             self,
             param_dict: Dict[str, np.ndarray],
@@ -60,6 +62,7 @@ class BaseOptimizer(metaclass=abc.ABCMeta):
 
 
 class GradientDescent(BaseOptimizer):
+
     def __init__(self, param_dict: Dict[str, np.ndarray],
                  learning_rate: float) -> None:
         super().__init__(param_dict, learning_rate)
@@ -78,6 +81,7 @@ class GradientDescent(BaseOptimizer):
 
 
 class Momentum(BaseOptimizer):
+
     def __init__(self,
                  param_dict: Dict[str, np.ndarray],
                  learning_rate: float,
@@ -113,6 +117,7 @@ class Momentum(BaseOptimizer):
 
 
 class RMSProp(BaseOptimizer):
+
     def __init__(self,
                  param_dict: Dict[str, np.ndarray],
                  learning_rate: float,
@@ -157,6 +162,7 @@ class RMSProp(BaseOptimizer):
 
 
 class Adam(BaseOptimizer):
+
     def __init__(
             self,
             param_dict: Dict[str, np.ndarray],

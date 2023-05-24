@@ -50,6 +50,7 @@ def onehot_to_word(arr):
 
 
 class WordDataset(Dataset):
+
     def __init__(self, words, max_length, is_onehot=True):
         super().__init__()
         n_words = len(words)
@@ -62,7 +63,7 @@ class WordDataset(Dataset):
         return self.n_words
 
     def __getitem__(self, index):
-        """return the (one-hot) encoding vector of a word"""
+        """return the (one-hot) encoding vector of a word."""
         word = self.words[index] + ' '
         word_length = len(word)
         if self.is_onehot:

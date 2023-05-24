@@ -11,6 +11,7 @@ from dldemos.utils import get_activation_de_func, get_activation_func, sigmoid
 
 
 class BaseRegressionModel(metaclass=abc.ABCMeta):
+
     def __init__(self):
         pass
 
@@ -41,6 +42,7 @@ class BaseRegressionModel(metaclass=abc.ABCMeta):
 
 
 class DeepNetwork(BaseRegressionModel):
+
     def __init__(self,
                  neuron_cnt: List[int],
                  activation_func: List[str],

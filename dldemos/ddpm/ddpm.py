@@ -2,6 +2,7 @@ import torch
 
 
 class DDPM():
+
     def __init__(self,
                  device,
                  n_steps: int,
@@ -76,10 +77,11 @@ class DDPM():
 
 
 def visualize_forward():
-    from dldemos.ddpm.dataset import get_dataloader
-    import einops
     import cv2
+    import einops
     import numpy as np
+
+    from dldemos.ddpm.dataset import get_dataloader
 
     n_steps = 100
     device = 'cuda'
