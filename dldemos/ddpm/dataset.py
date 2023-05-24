@@ -33,4 +33,6 @@ def get_img_shape():
 
 
 if __name__ == '__main__':
+    import os
+    os.makedirs('work_dirs', exist_ok=True)
     download_dataset()
