@@ -10,7 +10,7 @@ def conv2d(input: np.ndarray,
            dilation: int,
            groups: int,
            bias: np.ndarray = None) -> np.ndarray:
-    """2D Convolution Implemented with NumPy
+    """2D Convolution Implemented with NumPy.
 
     Args:
         input (np.ndarray): The input NumPy array of shape (H, W, C).

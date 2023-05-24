@@ -14,7 +14,7 @@ print(myvocab[0], myvocab[1], myvocab[2], myvocab[3])
 
 
 def get_counterpart(x1, y1, x2):
-    """Find y2 that makes x1-y1=x2-y2"""
+    """Find y2 that makes x1-y1=x2-y2."""
     x1_id = glove.stoi[x1]
     y1_id = glove.stoi[y1]
     x2_id = glove.stoi[x2]

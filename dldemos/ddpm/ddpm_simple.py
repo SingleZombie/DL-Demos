@@ -2,6 +2,7 @@ import torch
 
 
 class DDPM():
+
     def __init__(self,
                  device,
                  n_steps: int,

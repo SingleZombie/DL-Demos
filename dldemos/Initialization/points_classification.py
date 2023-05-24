@@ -3,6 +3,7 @@ import numpy as np
 
 
 def generate_points(cnt):
+
     def draw_ring(cnt, inner_radius, outer_radius):
         angle_arr = np.random.rand(cnt) * np.pi * 2
         length_arr = np.random.rand(cnt) * (outer_radius -

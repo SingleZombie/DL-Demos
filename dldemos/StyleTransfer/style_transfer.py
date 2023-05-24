@@ -39,6 +39,7 @@ content_weight = 1
 
 
 class ContentLoss(torch.nn.Module):
+
     def __init__(self, target: torch.Tensor):
         super().__init__()
         self.target = target.detach()
@@ -58,6 +59,7 @@ def gram(x: torch.Tensor):
 
 
 class StyleLoss(torch.nn.Module):
+
     def __init__(self, target: torch.Tensor):
         super().__init__()
         self.target = gram(target.detach()).detach()
@@ -69,6 +71,7 @@ class StyleLoss(torch.nn.Module):
 
 
 class Normalization(torch.nn.Module):
+
     def __init__(self, mean, std):
         super().__init__()
         self.mean = torch.tensor(mean).to(device).reshape(-1, 1, 1)
@@ -147,10 +150,10 @@ while steps <= 1000 and prev_loss < 100:
         model(input_img)
         content_loss = 0
         style_loss = 0
-        for l in content_losses:
-            content_loss += l.loss
-        for l in style_losses:
-            style_loss += l.loss
+        for ls in content_losses:
+            content_loss += ls.loss
+        for ls in style_losses:
+            style_loss += ls.loss
         loss = content_weight * content_loss + style_weight * style_loss
         loss.backward()
         steps += 1

@@ -3,9 +3,11 @@ import torch.nn as nn
 
 
 class VAE(nn.Module):
-    '''
-    VAE for 64x64 face generation. The hidden dimensions can be tuned.
-    '''
+    """VAE for 64x64 face generation.
+
+    The hidden dimensions can be tuned.
+    """
+
     def __init__(self, hiddens=[16, 32, 64, 128, 256], latent_dim=128) -> None:
         super().__init__()
 

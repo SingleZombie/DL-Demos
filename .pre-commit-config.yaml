@@ -1,22 +1,18 @@
 repos:
-  - repo: https://gitlab.com/pycqa/flake8.git
-    rev: 3.7.9
+  - repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
     hooks:
       - id: flake8
-  - repo: https://github.com/asottile/seed-isort-config
-    rev: v2.1.0
-    hooks:
-      - id: seed-isort-config
-  - repo: https://github.com/timothycrosley/isort
-    rev: 4.3.21
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.11.5
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/mirrors-yapf
-    rev: v0.29.0
+    rev: v0.32.0
     hooks:
       - id: yapf
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.1.0
+    rev: v4.2.0
     hooks:
       - id: trailing-whitespace
       - id: check-yaml
@@ -28,14 +24,17 @@ repos:
         args: ["--remove"]
       - id: mixed-line-ending
         args: ["--fix=lf"]
-  - repo: https://github.com/markdownlint/markdownlint
-    rev: v0.11.0
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.9
     hooks:
-      - id: markdownlint
-        args: ["-r", "~MD002,~MD013,~MD029,~MD033,~MD034",
-              "-t", "allow_different_nesting"]
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
+      - id: mdformat
+        args: ["--number", "--disable-escape", "link-enclosure"]
+        additional_dependencies:
+          - mdformat-openmmlab
+          - mdformat_frontmatter
+          - linkify-it-py
+  - repo: https://github.com/myint/docformatter
+    rev: v1.4
     hooks:
-      - id: codespell
-        args: ["--skip", "*.ipynb,tools/data/hvu/label_map.json,configs/restorers/srresnet_srgan/*.md", "-L", "formating,te,nd,thre,Gool,gool"]
+      - id: docformatter
+        args: ["--in-place", "--wrap-descriptions", "79"]

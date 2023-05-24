@@ -6,6 +6,7 @@ from dldemos.ddpm.dataset import get_img_shape
 
 
 class PositionalEncoding(nn.Module):
+
     def __init__(self, max_seq_len: int, d_model: int):
         super().__init__()
 
@@ -29,6 +30,7 @@ class PositionalEncoding(nn.Module):
 
 
 class ResidualBlock(nn.Module):
+
     def __init__(self, in_c: int, out_c: int):
         super().__init__()
         self.conv1 = nn.Conv2d(in_c, out_c, 3, 1, 1)
@@ -55,6 +57,7 @@ class ResidualBlock(nn.Module):
 
 
 class ConvNet(nn.Module):
+
     def __init__(self,
                  n_steps,
                  intermediate_channels=[10, 20, 40],
@@ -93,6 +96,7 @@ class ConvNet(nn.Module):
 
 
 class UnetBlock(nn.Module):
+
     def __init__(self, shape, in_c, out_c, residual=False):
         super().__init__()
         self.ln = nn.LayerNorm(shape)
@@ -118,6 +122,7 @@ class UnetBlock(nn.Module):
 
 
 class UNet(nn.Module):
+
     def __init__(self,
                  n_steps,
                  channels=[10, 20, 40, 80],
