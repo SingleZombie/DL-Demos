@@ -9,6 +9,7 @@ SOS_ID = 0
 EOS_ID = 1
 UNK_ID = 2
 PAD_ID = 3
+MAX_SEQ_LEN = 200
 
 
 def read_file(json_path):

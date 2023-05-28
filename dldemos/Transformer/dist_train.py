@@ -44,10 +44,16 @@ def main():
                         heads)
     model.to(device_id)
     model.init_weights()
-    
+
     model = DistributedDataParallel(model, device_ids=[device_id])
 
-    
+    dist.barrier()
+
+    # ckpt_path = ''
+    # map_location = {'cuda:0': f'cuda:{device_id}'}
+    # state_dict = torch.load(ckpt_path, map_location=map_location)
+    # print(f'rank {rank}: {state_dict}')
+    # model.module.load_state_dict(state_dict)
 
     optimizer = torch.optim.Adam(model.parameters(), lr)
     citerion = nn.CrossEntropyLoss(ignore_index=PAD_ID)
