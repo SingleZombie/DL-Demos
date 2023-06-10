@@ -4,6 +4,7 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 import time
 import numpy as np
+import os
 
 from dldemos.Transformer.preprocess_data import (get_dataloader, load_vocab,
                                                  load_sentences, PAD_ID)
@@ -13,10 +14,12 @@ from dldemos.Transformer.model import Transformer
 # Config
 batch_size = 64
 lr = 0.0001
-d_model = 256
-d_ff = 1024
+d_model = 512
+d_ff = 2048
 n_layers = 6
 heads = 8
+
+n_epochs = 40
 
 
 def reduce_mean(tensor, nprocs):
@@ -40,28 +43,35 @@ def main():
 
     print_interval = 1000
 
-    model = Transformer(len(en_vocab), len(zh_vocab), d_model, d_ff, n_layers,
-                        heads)
+    model = Transformer(len(en_vocab), len(zh_vocab), PAD_ID, d_model, d_ff,
+                        n_layers, heads)
     model.to(device_id)
-    model.init_weights()
 
     model = DistributedDataParallel(model, device_ids=[device_id])
-
-    dist.barrier()
-
-    # ckpt_path = ''
-    # map_location = {'cuda:0': f'cuda:{device_id}'}
-    # state_dict = torch.load(ckpt_path, map_location=map_location)
-    # print(f'rank {rank}: {state_dict}')
-    # model.module.load_state_dict(state_dict)
-
     optimizer = torch.optim.Adam(model.parameters(), lr)
+
+    # Optional: load model
+    ckpt_path = 'dldemos/Transformer/model_latest.pth'
+    optim_path = 'dldemos/Transformer/optimizer_latest.pth'
+    if os.path.exists(ckpt_path) and os.path.exists(optim_path):
+        map_location = {'cuda:0': f'cuda:{device_id}'}
+        state_dict = torch.load(ckpt_path, map_location=map_location)
+        model.module.load_state_dict(state_dict)
+        state_dict = torch.load(optim_path, map_location=map_location)
+        optimizer.load_state_dict(state_dict)
+        begin_epoch = int(
+            os.path.split(
+                os.readlink(ckpt_path))[-1].split('.')[0].split('_')[1]) + 1
+    else:
+        begin_epoch = 0
+
     citerion = nn.CrossEntropyLoss(ignore_index=PAD_ID)
     tic = time.time()
     cnter = 0
     dataset_len = len(dataloader_train.dataset)
-    print('Dataset size:', dataset_len)
-    for epoch in range(20):
+    if device_id == 0:
+        print('Dataset size:', dataset_len)
+    for epoch in range(begin_epoch, n_epochs):
         sampler.set_epoch(epoch)
 
         for x, y in dataloader_train:
@@ -77,13 +87,16 @@ def main():
             y_label = torch.reshape(y_label, (n * seq_len, ))
             loss = citerion(y_hat, y_label)
 
+            y_label_mask = y_label != PAD_ID
+            preds = torch.argmax(y_hat, -1)
+            correct = preds == y_label
+            acc = torch.sum(y_label_mask * correct) / torch.sum(y_label_mask)
+
             optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
             optimizer.step()
-
             loss = reduce_mean(loss, dist.get_world_size())
-
             if device_id == 0:
                 toc = time.time()
                 interval = toc - tic
@@ -91,12 +104,26 @@ def main():
                 seconds = int(interval % 60)
                 if cnter % print_interval == 0:
                     print(f'{cnter:08d} {minutes:02d}:{seconds:02d}'
-                          f' loss: {loss.item()}')
+                          f' loss: {loss.item()} acc: {acc.item()}')
             cnter += 1
 
         if device_id == 0:
-            torch.save(model.module.state_dict(),
-                       f'dldemos/Transformer/model_{epoch}.pth')
+            latest_model = 'dldemos/Transformer/model_latest.pth'
+            latest_optimizer = 'dldemos/Transformer/optimizer_latest.pth'
+            model_file = f'dldemos/Transformer/model_{epoch}.pth'
+            optim_file = f'dldemos/Transformer/optimizer_{epoch}.pth'
+            torch.save(model.module.state_dict(), model_file)
+            torch.save(optimizer.state_dict(), optim_file)
+
+            if os.path.exists(latest_model):
+                os.remove(latest_model)
+            if os.path.exists(latest_optimizer):
+                os.remove(latest_optimizer)
+
+            os.symlink(os.path.abspath(model_file), latest_model)
+            os.symlink(os.path.abspath(optim_file), latest_optimizer)
+
+            print(f'Model saved to {model_file}')
 
         dist.barrier()
 
@@ -109,3 +136,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# nohup bash dldemos/Transformer/dist_train.sh &

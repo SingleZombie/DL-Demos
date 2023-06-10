@@ -1,55 +1,56 @@
 import torch
 import torch.nn as nn
 import time
-import numpy as np
 
-from dldemos.Transformer.preprocess_data import (get_dataloader, load_vocab,
-                                                 load_sentences, PAD_ID)
-from dldemos.Transformer.dataset import tensor_to_sentence
+from dldemos.Transformer.data_load import (get_batch_indices, load_cn_vocab,
+                                           load_en_vocab, load_train_data,
+                                           maxlen)
 from dldemos.Transformer.model import Transformer
 
 # Config
 batch_size = 64
 lr = 0.0001
-d_model = 256
-d_ff = 1024
+d_model = 512
+d_ff = 2048
 n_layers = 6
 heads = 8
+dropout_rate = 0.2
+n_epochs = 60
+PAD_ID = 0
 
 
 def main():
-    en_vocab, zh_vocab = load_vocab()
+    device = 'cuda'
+    cn2idx, idx2cn = load_cn_vocab()
+    en2idx, idx2en = load_en_vocab()
+    # X: en
+    # Y: cn
+    Y, X = load_train_data()
 
-    en_train, zh_train, en_valid, zh_valid = load_sentences()
-    dataloader_train = get_dataloader(en_train, zh_train, batch_size)
-    dataloader_valid = get_dataloader(en_valid, zh_valid)
+    print_interval = 100
 
-    print_interval = 1000
-    device_id = 0
-
-    model = Transformer(len(en_vocab), len(zh_vocab), d_model, d_ff, n_layers,
-                        heads)
-    model.to(device_id)
-
-    model.init_weights()
+    model = Transformer(len(en2idx), len(cn2idx), PAD_ID, d_model, d_ff,
+                        n_layers, heads, dropout_rate, maxlen)
+    model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr)
+
     citerion = nn.CrossEntropyLoss(ignore_index=PAD_ID)
     tic = time.time()
     cnter = 0
-    dataset_len = len(dataloader_train.dataset)
-    print('Dataset size:', dataset_len)
-    for epoch in range(10):
-        loss_sum = 0
+    for epoch in range(n_epochs):
+        for index, _ in get_batch_indices(len(X), batch_size):
+            x_batch = torch.LongTensor(X[index]).to(device)
+            y_batch = torch.LongTensor(Y[index]).to(device)
+            y_input = y_batch[:, :-1]
+            y_label = y_batch[:, 1:]
+            y_hat = model(x_batch, y_input)
 
-        for x, y in dataloader_train:
-            x, y = x.to(device_id), y.to(device_id)
-            x_mask = x == PAD_ID
-            y_mask = y == PAD_ID
-            y_input = y[:, :-1]
-            y_label = y[:, 1:]
-            y_mask = y_mask[:, :-1]
-            y_hat = model(x, y_input, x_mask, y_mask)
+            y_label_mask = y_label != PAD_ID
+            preds = torch.argmax(y_hat, -1)
+            correct = preds == y_label
+            acc = torch.sum(y_label_mask * correct) / torch.sum(y_label_mask)
+
             n, seq_len = y_label.shape
             y_hat = torch.reshape(y_hat, (n * seq_len, -1))
             y_label = torch.reshape(y_label, (n * seq_len, ))
@@ -57,23 +58,23 @@ def main():
 
             optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
             optimizer.step()
 
-            loss_sum += loss.item()
-
-            toc = time.time()
-            interval = toc - tic
-            minutes = int(interval // 60)
-            seconds = int(interval % 60)
             if cnter % print_interval == 0:
+                toc = time.time()
+                interval = toc - tic
+                minutes = int(interval // 60)
+                seconds = int(interval % 60)
                 print(f'{cnter:08d} {minutes:02d}:{seconds:02d}'
-                      f' loss: {loss.item()}')
+                      f' loss: {loss.item()} acc: {acc.item()}')
             cnter += 1
 
-        print(f'Epoch {epoch}. loss: {loss_sum / dataset_len}')
+    model_path = 'dldemos/Transformer/model.pth'
+    torch.save(model.state_dict(), model_path)
 
-        # if valid_period
+    print(f'Model saved to {model_path}')
 
-    torch.save(model.state_dict(), 'dldemos/Transformer/model.pth')
-    print('Done.')
+
+if __name__ == '__main__':
+    main()

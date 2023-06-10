@@ -1,1 +1,0 @@
-torchrun --nproc_per_node=4 dldemos/Transformer/dist_train.py

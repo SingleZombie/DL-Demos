@@ -1,7 +1,6 @@
 import json
 import numpy as np
 from collections import Counter
-import jieba
 
 from torchtext.data import get_tokenizer
 
@@ -13,6 +12,7 @@ MAX_SEQ_LEN = 200
 
 
 def read_file(json_path):
+    import jieba
     english_sentences = []
     chinese_sentences = []
     tokenizer = get_tokenizer('basic_english')

@@ -9,17 +9,15 @@ from torch.nn.utils.rnn import pad_sequence
 import torch
 
 
-def load_vocab():
-    vocab = np.load('data/translation2019zh/vocab.npy',
-                    allow_pickle=True).item()
+def load_vocab(filename='data/translation2019zh/vocab_30k_80k.npy'):
+    vocab = np.load(filename, allow_pickle=True).item()
     en_vocab = vocab['en']
     zh_vocab = vocab['zh']
     return en_vocab, zh_vocab
 
 
-def load_sentences():
-    tensors = np.load('data/translation2019zh/sentences.npy',
-                      allow_pickle=True).item()
+def load_sentences(filename='data/translation2019zh/sentences.npy'):
+    tensors = np.load(filename, allow_pickle=True).item()
     en_tensors_train = tensors['en_train']
     zh_tensors_train = tensors['zh_train']
     en_tensors_valid = tensors['en_valid']
@@ -114,14 +112,15 @@ def test2():
 
 
 def main():
+
     en_sens_train, zh_sens_train = read_file(
         'data/translation2019zh/translation2019zh_train.json')
     en_sens_valid, zh_sens_valid = read_file(
         'data/translation2019zh/translation2019zh_valid.json')
-    en_vocab = create_vocab(en_sens_train, 20000)
-    zh_vocab = create_vocab(zh_sens_train, 50000)
+    en_vocab = create_vocab(en_sens_train, 30000)
+    zh_vocab = create_vocab(zh_sens_train, 80000)
     vocab = {'en': en_vocab, 'zh': zh_vocab}
-    np.save('data/translation2019zh/vocab.npy', vocab)
+    np.save('data/translation2019zh/vocab_30k_80k.npy', vocab)
 
     en_tensors_train = sentence_to_tensor(en_sens_train, en_vocab)
     zh_tensors_train = sentence_to_tensor(zh_sens_train, zh_vocab)

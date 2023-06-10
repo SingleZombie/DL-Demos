@@ -15,11 +15,11 @@ class PositionalEncoding(nn.Module):
         # Assume d_model is an even number for convenience
         assert d_model % 2 == 0
 
-        i_seq = torch.linspace(1, max_seq_len, max_seq_len)
-        j_seq = torch.linspace(2, d_model, d_model // 2)
+        i_seq = torch.linspace(0, max_seq_len - 1, max_seq_len)
+        j_seq = torch.linspace(0, d_model - 2, d_model // 2)
         pos, two_i = torch.meshgrid(i_seq, j_seq)
-        pe_2i = torch.sin((pos / 10000)**(two_i / d_model))
-        pe_2i_1 = torch.cos((pos / 10000)**(two_i / d_model))
+        pe_2i = torch.sin(pos / 10000**(two_i / d_model))
+        pe_2i_1 = torch.cos(pos / 10000**(two_i / d_model))
         pe = torch.stack((pe_2i, pe_2i_1), 2).reshape(1, max_seq_len, d_model)
 
         self.register_buffer('pe', pe, False)
@@ -29,8 +29,8 @@ class PositionalEncoding(nn.Module):
         pe: torch.Tensor = self.pe
         assert seq_len <= pe.shape[1]
         assert d_model == pe.shape[2]
-        x *= d_model**0.5
-        return x + pe[:, 0:seq_len, :]
+        rescaled_x = x * d_model**0.5
+        return rescaled_x + pe[:, 0:seq_len, :]
 
 
 def attention(q: torch.Tensor,
@@ -38,10 +38,11 @@ def attention(q: torch.Tensor,
               v: torch.Tensor,
               mask: Optional[torch.Tensor] = None):
     '''
-    # Note: The dtype of mask must be bool
+    Note: The dtype of mask must be bool
     '''
     # q shape: [n, heads, q_len, d_k]
-    # k v shape: [n, heads, k_len, d_v]
+    # k shape: [n, heads, k_len, d_k]
+    # v shape: [n, heads, k_len, d_v]
     assert q.shape[-1] == k.shape[-1]
     d_k = k.shape[-1]
     # tmp shape: [n, heads, q_len, k_len]
@@ -60,6 +61,7 @@ class MultiHeadAttention(nn.Module):
         super().__init__()
 
         assert d_model % heads == 0
+        # dk == dv
         self.d_k = d_model // heads
         self.heads = heads
         self.d_model = d_model
@@ -82,11 +84,11 @@ class MultiHeadAttention(nn.Module):
 
         n, q_len = q.shape[0:2]
         n, k_len = k.shape[0:2]
-        q = self.q(q).reshape(n, q_len, self.heads, self.d_k).transpose(1, 2)
-        k = self.k(k).reshape(n, k_len, self.heads, self.d_k).transpose(1, 2)
-        v = self.v(v).reshape(n, k_len, self.heads, self.d_k).transpose(1, 2)
+        q_ = self.q(q).reshape(n, q_len, self.heads, self.d_k).transpose(1, 2)
+        k_ = self.k(k).reshape(n, k_len, self.heads, self.d_k).transpose(1, 2)
+        v_ = self.v(v).reshape(n, k_len, self.heads, self.d_k).transpose(1, 2)
 
-        attention_res = attention(q, k, v, mask)
+        attention_res = attention(q_, k_, v_, mask)
         concat_res = attention_res.transpose(1, 2).reshape(
             n, q_len, self.d_model)
         concat_res = self.dropout(concat_res)
@@ -126,9 +128,12 @@ class EncoderLayer(nn.Module):
         self.dropout2 = nn.Dropout(dropout)
 
     def forward(self, x, src_mask: Optional[torch.Tensor] = None):
-        x = self.norm1(x +
-                       self.dropout1(self.self_attention(x, x, x, src_mask)))
-        x = self.norm2(x + self.dropout2(self.ffn(x)))
+        tmp = self.self_attention(x, x, x, src_mask)
+        tmp = self.dropout1(tmp)
+        x = self.norm1(x + tmp)
+        tmp = self.ffn(x)
+        tmp = self.dropout2(tmp)
+        x = self.norm2(x + tmp)
         return x
 
 
@@ -155,11 +160,15 @@ class DecoderLayer(nn.Module):
                 encoder_kv: torch.Tensor,
                 dst_mask: Optional[torch.Tensor] = None,
                 src_dst_mask: Optional[torch.Tensor] = None):
-        x = self.norm1(x +
-                       self.dropout1(self.self_attention(x, x, x, dst_mask)))
-        x = self.norm2(x + self.dropout2(
-            self.attention(x, encoder_kv, encoder_kv, src_dst_mask)))
-        x = self.norm3(x + self.dropout2(self.ffn(x)))
+        tmp = self.self_attention(x, x, x, dst_mask)
+        tmp = self.dropout1(tmp)
+        x = self.norm1(x + tmp)
+        tmp = self.attention(x, encoder_kv, encoder_kv, src_dst_mask)
+        tmp = self.dropout2(tmp)
+        x = self.norm2(x + tmp)
+        tmp = self.ffn(x)
+        tmp = self.dropout3(tmp)
+        x = self.norm3(x + tmp)
         return x
 
 
@@ -167,6 +176,7 @@ class Encoder(nn.Module):
 
     def __init__(self,
                  vocab_size: int,
+                 pad_idx: int,
                  d_model: int,
                  d_ff: int,
                  n_layers: int,
@@ -174,7 +184,7 @@ class Encoder(nn.Module):
                  dropout: float = 0.1,
                  max_seq_len: int = 120):
         super().__init__()
-        self.embedding = nn.Embedding(vocab_size, d_model)
+        self.embedding = nn.Embedding(vocab_size, d_model, pad_idx)
         self.pe = PositionalEncoding(d_model, max_seq_len)
         self.layers = []
         for i in range(n_layers):
@@ -184,7 +194,6 @@ class Encoder(nn.Module):
 
     def forward(self, x, src_mask: Optional[torch.Tensor] = None):
         x = self.embedding(x)
-        x = self.dropout(x)
         x = self.pe(x)
         x = self.dropout(x)
         for layer in self.layers:
@@ -196,6 +205,7 @@ class Decoder(nn.Module):
 
     def __init__(self,
                  vocab_size: int,
+                 pad_idx: int,
                  d_model: int,
                  d_ff: int,
                  n_layers: int,
@@ -203,7 +213,7 @@ class Decoder(nn.Module):
                  dropout: float = 0.1,
                  max_seq_len: int = 120):
         super().__init__()
-        self.embedding = nn.Embedding(vocab_size, d_model)
+        self.embedding = nn.Embedding(vocab_size, d_model, pad_idx)
         self.pe = PositionalEncoding(d_model, max_seq_len)
         self.layers = []
         for i in range(n_layers):
@@ -217,7 +227,6 @@ class Decoder(nn.Module):
                 dst_mask: Optional[torch.Tensor] = None,
                 src_dst_mask: Optional[torch.Tensor] = None):
         x = self.embedding(x)
-        x = self.dropout(x)
         x = self.pe(x)
         x = self.dropout(x)
         for layer in self.layers:
@@ -230,6 +239,7 @@ class Transformer(nn.Module):
     def __init__(self,
                  src_vocab_size: int,
                  dst_vocab_size: int,
+                 pad_idx: int,
                  d_model: int,
                  d_ff: int,
                  n_layers: int,
@@ -237,16 +247,12 @@ class Transformer(nn.Module):
                  dropout: float = 0.1,
                  max_seq_len: int = 200):
         super().__init__()
-        self.encoder = Encoder(src_vocab_size, d_model, d_ff, n_layers, heads,
-                               dropout, max_seq_len)
-        self.decoder = Decoder(dst_vocab_size, d_model, d_ff, n_layers, heads,
-                               dropout, max_seq_len)
-        self.heads = heads
-
-    def init_weights(self):
-        for p in self.parameters():
-            if p.dim() > 1:
-                nn.init.xavier_uniform_(p)
+        self.encoder = Encoder(src_vocab_size, pad_idx, d_model, d_ff,
+                               n_layers, heads, dropout, max_seq_len)
+        self.decoder = Decoder(dst_vocab_size, pad_idx, d_model, d_ff,
+                               n_layers, heads, dropout, max_seq_len)
+        self.pad_idx = pad_idx
+        self.output_layer = nn.Linear(d_model, dst_vocab_size)
 
     def generate_mask(self,
                       q_pad: torch.Tensor,
@@ -259,7 +265,7 @@ class Transformer(nn.Module):
         n, q_len = q_pad.shape
         n, k_len = k_pad.shape
 
-        mask_shape = (n, self.heads, q_len, k_len)
+        mask_shape = (n, 1, q_len, k_len)
         if with_left_mask:
             mask = 1 - torch.tril(torch.ones(mask_shape))
         else:
@@ -271,16 +277,14 @@ class Transformer(nn.Module):
         mask = mask.to(torch.bool)
         return mask
 
-    def forward(self,
-                x,
-                y,
-                src_pad_mask: Optional[torch.Tensor] = None,
-                dst_pad_mask: Optional[torch.Tensor] = None):
+    def forward(self, x, y):
+
+        src_pad_mask = x == self.pad_idx
+        dst_pad_mask = y == self.pad_idx
         src_mask = self.generate_mask(src_pad_mask, src_pad_mask, False)
         dst_mask = self.generate_mask(dst_pad_mask, dst_pad_mask, True)
         src_dst_mask = self.generate_mask(dst_pad_mask, src_pad_mask, False)
         encoder_kv = self.encoder(x, src_mask)
         res = self.decoder(y, encoder_kv, dst_mask, src_dst_mask)
-        embedding_reverse = self.decoder.embedding.weight.transpose(0, 1)
-        res = torch.matmul(res, embedding_reverse)
+        res = self.output_layer(res)
         return res
