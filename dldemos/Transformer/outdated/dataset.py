@@ -1,7 +1,7 @@
 import json
-import numpy as np
 from collections import Counter
 
+import numpy as np
 from torchtext.data import get_tokenizer
 
 SOS_ID = 0
@@ -33,7 +33,7 @@ def read_file(json_path):
 
 
 def create_vocab(sentences, max_element=None):
-    """Note that max_element includes special characters"""
+    """Note that max_element includes special characters."""
 
     default_list = ['<sos>', '<eos>', '<unk>', '<pad>']
 

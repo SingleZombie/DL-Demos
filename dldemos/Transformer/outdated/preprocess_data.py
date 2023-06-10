@@ -1,12 +1,12 @@
-from dldemos.Transformer.dataset import (read_file, create_vocab,
-                                         sentence_to_tensor, PAD_ID, SOS_ID,
-                                         EOS_ID, tensor_to_sentence)
 import numpy as np
-
+import torch
+from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
-from torch.nn.utils.rnn import pad_sequence
-import torch
+
+from dldemos.Transformer.dataset import (EOS_ID, PAD_ID, SOS_ID, create_vocab,
+                                         read_file, sentence_to_tensor,
+                                         tensor_to_sentence)
 
 
 def load_vocab(filename='data/translation2019zh/vocab_30k_80k.npy'):
