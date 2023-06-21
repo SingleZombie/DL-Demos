@@ -8,6 +8,9 @@ from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
 import einops
 
+CELEBA_DIR = 'data/celebA/img_align_celeba'
+CELEBA_HQ_DIR = 'data/celebA/celeba_hq_256'
+
 
 def download_mnist():
     mnist = torchvision.datasets.MNIST(root='./data/mnist', download=True)
@@ -69,14 +72,17 @@ class MNISTImageDataset(Dataset):
 
 def get_dataloader(type,
                    batch_size,
-                   root='data/celebA/img_align_celeba',
                    img_shape=None,
                    dist_train=False,
                    **kwargs):
     if type == 'CelebA':
         if img_shape is not None:
             kwargs['img_shape'] = img_shape
-        dataset = CelebADataset(root, **kwargs)
+        dataset = CelebADataset(CELEBA_DIR, **kwargs)
+    elif type == 'CelebAHQ':
+        if img_shape is not None:
+            kwargs['img_shape'] = img_shape
+        dataset = CelebADataset(CELEBA_HQ_DIR, **kwargs)
     elif type == 'MNIST':
         if img_shape is not None:
             dataset = MNISTImageDataset(img_shape)
@@ -96,7 +102,7 @@ def get_dataloader(type,
 if __name__ == '__main__':
     os.makedirs('work_dirs', exist_ok=True)
 
-    if os.path.exists('data/celebA/img_align_celeba'):
+    if os.path.exists(CELEBA_DIR):
         dataloader = get_dataloader('CelebA', 16)
         img = next(iter(dataloader))
         print(img.shape)
@@ -106,5 +112,15 @@ if __name__ == '__main__':
                                n1=int(N**0.5))
         img = transforms.ToPILImage()(img)
         img.save('work_dirs/tmp_celeba.jpg')
+    if os.path.exists(CELEBA_HQ_DIR):
+        dataloader = get_dataloader('CelebAHQ', 16)
+        img = next(iter(dataloader))
+        print(img.shape)
+        N = img.shape[0]
+        img = einops.rearrange(img,
+                               '(n1 n2) c h w -> c (n1 h) (n2 w)',
+                               n1=int(N**0.5))
+        img = transforms.ToPILImage()(img)
+        img.save('work_dirs/tmp_celebahq.jpg')
 
     download_mnist()

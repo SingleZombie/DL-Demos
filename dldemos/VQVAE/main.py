@@ -1,3 +1,4 @@
+import argparse
 import os
 import time
 
@@ -9,26 +10,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from dldemos.VQVAE.model import VQVAE
+from dldemos.VQVAE.configs import get_cfg
 from dldemos.pixelcnn.model import GatedPixelCNN
 from dldemos.VQVAE.dataset import get_dataloader
-
-# For MNIST
-# dim = 256
-# n_embedding = 512
-# batch_size = 256
-# n_epochs = 100
-# l_w_embedding = 1
-# l_w_commitment = 0.25 * l_w_embedding
-# lr = 2e-4
-
-# n_epochs_2 = 20
-# pixelcnn_n_blocks = 15
-# pixelcnn_dim = 128
-# pixelcnn_linear_dim = 32
-
-# For CelebA
-
-#2
 
 
 def train_vqvae(model: VQVAE,
@@ -48,6 +32,8 @@ def train_vqvae(model: VQVAE,
     optimizer = torch.optim.Adam(model.parameters(), lr)
     mse_loss = nn.MSELoss()
     tic = time.time()
+    ckpt_path_prefix = ckpt_path.split('.')[0]
+    save_per_epoch = 5
     for e in range(n_epochs):
         total_loss = 0
 
@@ -68,6 +54,8 @@ def train_vqvae(model: VQVAE,
         total_loss /= len(dataloader.dataset)
         toc = time.time()
         torch.save(model.state_dict(), ckpt_path)
+        if e % save_per_epoch == 0:
+            torch.save(model.state_dict(), f'{ckpt_path_prefix}_e_{e}.pth')
         print(f'epoch {e} loss: {total_loss} elapsed {(toc - tic):.2f}s')
     print('Done')
 
@@ -120,7 +108,7 @@ def reconstruct(model, x, device, dataset_type='MNIST'):
     x_cat = torch.concat((x, x_hat), 3)
     x_cat = einops.rearrange(x_cat, '(n1 n2) c h w -> (n1 h) (n2 w) c', n1=n1)
     x_cat = (x_cat.clip(0, 1) * 255).cpu().numpy().astype(np.uint8)
-    if dataset_type == 'CelebA':
+    if dataset_type == 'CelebA' or dataset_type == 'CelebAHQ':
         x_cat = cv2.cvtColor(x_cat, cv2.COLOR_RGB2BGR)
     cv2.imwrite(f'work_dirs/vqvae_reconstruct_{dataset_type}.jpg', x_cat)
 
@@ -166,68 +154,16 @@ def sample_imgs(vqvae: VQVAE,
     cv2.imwrite(f'work_dirs/vqvae_sample_{dataset_type}.jpg', imgs)
 
 
-mnist_cfg1 = dict()
-
-celeba_cfg1 = dict(dataset_type='CelebA',
-                   img_shape=(3, 64, 64),
-                   dim=128,
-                   n_embedding=64,
-                   n_residual=3,
-                   batch_size=128,
-                   n_epochs=200,
-                   l_w_embedding=1,
-                   l_w_commitment=0.25,
-                   lr=1e-3,
-                   n_epochs_2=50,
-                   batch_size_2=512,
-                   pixelcnn_n_blocks=15,
-                   pixelcnn_dim=128,
-                   pixelcnn_linear_dim=32,
-                   vqvae_path='dldemos/VQVAE/model_celeba.pth',
-                   gen_model_path='dldemos/VQVAE/gen_model_celeba.pth')
-
-celeba_cfg2 = dict(dataset_type='CelebA',
-                   img_shape=(3, 128, 128),
-                   dim=128,
-                   n_embedding=64,
-                   n_residual=3,
-                   batch_size=64,
-                   n_epochs=200,
-                   l_w_embedding=1,
-                   l_w_commitment=0.25,
-                   lr=1e-3,
-                   n_epochs_2=50,
-                   batch_size_2=512,
-                   pixelcnn_n_blocks=15,
-                   pixelcnn_dim=128,
-                   pixelcnn_linear_dim=32,
-                   vqvae_path='dldemos/VQVAE/model_celeba_2.pth',
-                   gen_model_path='dldemos/VQVAE/gen_model_celeba_2.pth')
-
-celeba_cfg3 = dict(dataset_type='CelebA',
-                   img_shape=(3, 128, 128),
-                   dim=256,
-                   n_embedding=128,
-                   n_residual=2,
-                   batch_size=32,
-                   n_epochs=50,
-                   l_w_embedding=1,
-                   l_w_commitment=0.25,
-                   lr=2e-4,
-                   n_epochs_2=50,
-                   batch_size_2=64,
-                   pixelcnn_n_blocks=15,
-                   pixelcnn_dim=128,
-                   pixelcnn_linear_dim=32,
-                   vqvae_path='dldemos/VQVAE/model_celeba_3.pth',
-                   gen_model_path='dldemos/VQVAE/gen_model_celeba_3.pth')
-cfgs = [celeba_cfg1, celeba_cfg2, celeba_cfg3]
-
 if __name__ == '__main__':
     os.makedirs('work_dirs', exist_ok=True)
-    cfg = cfgs[0]
 
-    device = 'cuda'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', type=int, default=0)
+    parser.add_argument('-d', type=int, default=0)
+    args = parser.parse_args()
+    cfg = get_cfg(args.c)
+
+    device = f'cuda:{args.d}'
 
     img_shape = cfg['img_shape']
     vqvae = VQVAE(img_shape[0], cfg['dim'], cfg['n_embedding'], 2,
@@ -237,24 +173,24 @@ if __name__ == '__main__':
                               cfg['n_embedding'])
 
     # 1. Train VQVAE
-    # train_vqvae(vqvae,
-    #             img_shape=(img_shape[1], img_shape[2]),
-    #             device=device,
-    #             ckpt_path=cfg['vqvae_path'],
-    #             batch_size=cfg['batch_size'],
-    #             dataset_type=cfg['dataset_type'],
-    #             lr=cfg['lr'],
-    #             n_epochs=cfg['n_epochs'],
-    #             l_w_embedding=cfg['l_w_embedding'],
-    #             l_w_commitment=cfg['l_w_commitment'])
+    train_vqvae(vqvae,
+                img_shape=(img_shape[1], img_shape[2]),
+                device=device,
+                ckpt_path=cfg['vqvae_path'],
+                batch_size=cfg['batch_size'],
+                dataset_type=cfg['dataset_type'],
+                lr=cfg['lr'],
+                n_epochs=cfg['n_epochs'],
+                l_w_embedding=cfg['l_w_embedding'],
+                l_w_commitment=cfg['l_w_commitment'])
 
     # 2. Test VQVAE by visualizaing reconstruction result
-    vqvae.load_state_dict(torch.load(cfg['vqvae_path']))
-    dataloader = get_dataloader(cfg['dataset_type'],
-                                16,
-                                img_shape=(img_shape[1], img_shape[2]))
-    img = next(iter(dataloader)).to(device)
-    reconstruct(vqvae, img, device, cfg['dataset_type'])
+    # vqvae.load_state_dict(torch.load('dldemos/VQVAE/model_celeba_2_e_16.pth'))
+    # dataloader = get_dataloader(cfg['dataset_type'],
+    #                             16,
+    #                             img_shape=(img_shape[1], img_shape[2]))
+    # img = next(iter(dataloader)).to(device)
+    # reconstruct(vqvae, img, device, cfg['dataset_type'])
 
     # 3. Train Generative model (Gated PixelCNN in our project)
     # vqvae.load_state_dict(torch.load(vqvae_path))
