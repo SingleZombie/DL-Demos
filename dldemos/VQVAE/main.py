@@ -11,8 +11,10 @@ import torch.nn.functional as F
 
 from dldemos.VQVAE.model import VQVAE
 from dldemos.VQVAE.configs import get_cfg
-from dldemos.pixelcnn.model import GatedPixelCNN
+from dldemos.VQVAE.pixelcnn_model import PixelCNNWithEmbedding
 from dldemos.VQVAE.dataset import get_dataloader
+
+USE_LMDB = False
 
 
 def train_vqvae(model: VQVAE,
@@ -26,14 +28,15 @@ def train_vqvae(model: VQVAE,
                 l_w_embedding=1,
                 l_w_commitment=0.25):
     print('batch size:', batch_size)
-    dataloader = get_dataloader(dataset_type, batch_size, img_shape=img_shape)
+    dataloader = get_dataloader(dataset_type,
+                                batch_size,
+                                img_shape=img_shape,
+                                use_lmdb=USE_LMDB)
     model.to(device)
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr)
     mse_loss = nn.MSELoss()
     tic = time.time()
-    ckpt_path_prefix = ckpt_path.split('.')[0]
-    save_per_epoch = 5
     for e in range(n_epochs):
         total_loss = 0
 
@@ -54,21 +57,23 @@ def train_vqvae(model: VQVAE,
         total_loss /= len(dataloader.dataset)
         toc = time.time()
         torch.save(model.state_dict(), ckpt_path)
-        if e % save_per_epoch == 0:
-            torch.save(model.state_dict(), f'{ckpt_path_prefix}_e_{e}.pth')
         print(f'epoch {e} loss: {total_loss} elapsed {(toc - tic):.2f}s')
     print('Done')
 
 
 def train_generative_model(vqvae: VQVAE,
                            model,
-                           n_embedding,
+                           img_shape=None,
                            device='cuda',
                            ckpt_path='dldemos/VQVAE/gen_model.pth',
                            dataset_type='MNIST',
                            batch_size=64,
-                           n_epoch=50):
-    dataloader = get_dataloader(dataset_type, batch_size)
+                           n_epochs=50):
+    print('batch size:', batch_size)
+    dataloader = get_dataloader(dataset_type,
+                                batch_size,
+                                img_shape=img_shape,
+                                use_lmdb=USE_LMDB)
     vqvae.to(device)
     vqvae.eval()
     model.to(device)
@@ -76,7 +81,7 @@ def train_generative_model(vqvae: VQVAE,
     optimizer = torch.optim.Adam(model.parameters(), 1e-3)
     loss_fn = nn.CrossEntropyLoss()
     tic = time.time()
-    for e in range(n_epoch):
+    for e in range(n_epochs):
         total_loss = 0
         for x in dataloader:
             current_batch_size = x.shape[0]
@@ -84,8 +89,7 @@ def train_generative_model(vqvae: VQVAE,
                 x = x.to(device)
                 x = vqvae.encode(x)
 
-            model_input = x.unsqueeze(1).float() / (n_embedding - 1)
-            predict_x = model(model_input)
+            predict_x = model(x)
             loss = loss_fn(predict_x, x)
             optimizer.zero_grad()
             loss.backward()
@@ -116,7 +120,6 @@ def reconstruct(model, x, device, dataset_type='MNIST'):
 def sample_imgs(vqvae: VQVAE,
                 gen_model,
                 img_shape,
-                n_embedding,
                 n_sample=81,
                 device='cuda',
                 dataset_type='MNIST'):
@@ -127,19 +130,17 @@ def sample_imgs(vqvae: VQVAE,
 
     C, H, W = img_shape
     H, W = vqvae.get_latent_HW((C, H, W))
-    input_shape = (n_sample, 1, H, W)
-    x = torch.zeros(input_shape).to(device)
+    input_shape = (n_sample, H, W)
+    x = torch.zeros(input_shape).to(device).to(torch.long)
     with torch.no_grad():
         for i in range(H):
             for j in range(W):
                 output = gen_model(x)
                 prob_dist = F.softmax(output[:, :, i, j], -1)
-                pixel = torch.multinomial(prob_dist,
-                                          1).float() / (n_embedding - 1)
-                x[:, :, i, j] = pixel
+                pixel = torch.multinomial(prob_dist, 1)
+                x[:, i, j] = pixel[:, 0]
 
-    generated_latent = torch.ceil(x.squeeze(1) * (n_embedding - 1)).long()
-    imgs = vqvae.decode(generated_latent)
+    imgs = vqvae.decode(x)
 
     imgs = imgs * 255
     imgs = imgs.clip(0, 255)
@@ -148,7 +149,7 @@ def sample_imgs(vqvae: VQVAE,
                             n1=int(n_sample**0.5))
 
     imgs = imgs.detach().cpu().numpy().astype(np.uint8)
-    if dataset_type == 'CelebA':
+    if dataset_type == 'CelebA' or dataset_type == 'CelebAHQ':
         imgs = cv2.cvtColor(imgs, cv2.COLOR_RGB2BGR)
 
     cv2.imwrite(f'work_dirs/vqvae_sample_{dataset_type}.jpg', imgs)
@@ -166,12 +167,12 @@ if __name__ == '__main__':
     device = f'cuda:{args.d}'
 
     img_shape = cfg['img_shape']
-    vqvae = VQVAE(img_shape[0], cfg['dim'], cfg['n_embedding'], 2,
-                  cfg['n_residual'])
-    gen_model = GatedPixelCNN(cfg['pixelcnn_n_blocks'], cfg['pixelcnn_dim'],
-                              cfg['pixelcnn_linear_dim'], True,
-                              cfg['n_embedding'])
 
+    vqvae = VQVAE(img_shape[0], cfg['dim'], cfg['n_embedding'])
+    gen_model = PixelCNNWithEmbedding(cfg['pixelcnn_n_blocks'],
+                                      cfg['pixelcnn_dim'],
+                                      cfg['pixelcnn_linear_dim'], True,
+                                      cfg['n_embedding'])
     # 1. Train VQVAE
     train_vqvae(vqvae,
                 img_shape=(img_shape[1], img_shape[2]),
@@ -185,18 +186,30 @@ if __name__ == '__main__':
                 l_w_commitment=cfg['l_w_commitment'])
 
     # 2. Test VQVAE by visualizaing reconstruction result
-    # vqvae.load_state_dict(torch.load('dldemos/VQVAE/model_celeba_2_e_16.pth'))
-    # dataloader = get_dataloader(cfg['dataset_type'],
-    #                             16,
-    #                             img_shape=(img_shape[1], img_shape[2]))
-    # img = next(iter(dataloader)).to(device)
-    # reconstruct(vqvae, img, device, cfg['dataset_type'])
+    vqvae.load_state_dict(torch.load(cfg['vqvae_path']))
+    dataloader = get_dataloader(cfg['dataset_type'],
+                                16,
+                                img_shape=(img_shape[1], img_shape[2]))
+    img = next(iter(dataloader)).to(device)
+    reconstruct(vqvae, img, device, cfg['dataset_type'])
 
     # 3. Train Generative model (Gated PixelCNN in our project)
-    # vqvae.load_state_dict(torch.load(vqvae_path))
-    # train_generative_model(vqvae, gen_model, device, gen_model_path)
+    vqvae.load_state_dict(torch.load(cfg['vqvae_path']))
+
+    train_generative_model(vqvae,
+                           gen_model,
+                           img_shape=(img_shape[1], img_shape[2]),
+                           device=device,
+                           ckpt_path=cfg['gen_model_path'],
+                           dataset_type=cfg['dataset_type'],
+                           batch_size=cfg['batch_size_2'],
+                           n_epochs=cfg['n_epochs_2'])
 
     # 4. Sample VQVAE
-    # vqvae.load_state_dict(torch.load(vqvae_path))
-    # gen_model.load_state_dict(torch.load(gen_model_path))
-    # sample_imgs(vqvae, gen_model)
+    vqvae.load_state_dict(torch.load(cfg['vqvae_path']))
+    gen_model.load_state_dict(torch.load(cfg['gen_model_path']))
+    sample_imgs(vqvae,
+                gen_model,
+                cfg['img_shape'],
+                device=device,
+                dataset_type=cfg['dataset_type'])

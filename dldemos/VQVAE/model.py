@@ -8,74 +8,41 @@ class ResidualBlock(nn.Module):
         super().__init__()
         self.relu = nn.ReLU()
         self.conv1 = nn.Conv2d(dim, dim, 3, 1, 1)
-        self.bn1 = nn.BatchNorm2d(dim)
         self.conv2 = nn.Conv2d(dim, dim, 1)
-        self.bn2 = nn.BatchNorm2d(dim)
 
     def forward(self, x):
         tmp = self.relu(x)
         tmp = self.conv1(tmp)
-        tmp = self.bn1(tmp)
         tmp = self.relu(tmp)
         tmp = self.conv2(tmp)
-        tmp = self.bn2(tmp)
         return x + tmp
-
-
-'''
-Model architecture in paper
-self.encoder = nn.Sequential(nn.Conv2d(input_dim, dim, 4, 2, 1),
-                                nn.BatchNorm2d(dim), nn.ReLU(),
-                                nn.Conv2d(dim, dim, 4, 2, 1),
-                                ResidualBlock(dim), ResidualBlock(dim))
-self.vq_embedding = nn.Embedding(embedding_dim, dim)
-self.decoder = nn.Sequential(
-    ResidualBlock(dim), ResidualBlock(dim), nn.ReLU(),
-    nn.ConvTranspose2d(dim, dim, 4, 2, 1), nn.BatchNorm2d(dim),
-    nn.ReLU(), nn.ConvTranspose2d(dim, input_dim, 4, 2, 1), nn.ReLU())
-'''
 
 
 class VQVAE(nn.Module):
 
-    def __init__(self,
-                 input_dim,
-                 dim,
-                 n_embedding,
-                 n_downsample=2,
-                 n_residual=2):
+    def __init__(self, input_dim, dim, n_embedding):
         super().__init__()
-
-        assert n_downsample >= 1
-
-        # 1st downsample block
-        encoder_list = [nn.Conv2d(input_dim, dim, 4, 2, 1)]
-        decoder_list = [nn.ReLU(), nn.ConvTranspose2d(dim, input_dim, 4, 2, 1)]
-        for _ in range(n_downsample - 1):
-            encoder_list.append(nn.BatchNorm2d(dim))
-            encoder_list.append(nn.ReLU())
-            encoder_list.append(nn.Conv2d(dim, dim, 4, 2, 1))
-
-            decoder_list.append(nn.ReLU())
-            decoder_list.append(nn.BatchNorm2d(dim))
-            decoder_list.append(nn.ConvTranspose2d(dim, dim, 4, 2, 1))
-        decoder_list.append(nn.ReLU())
-        for _ in range(n_residual):
-            encoder_list.append(ResidualBlock(dim))
-            decoder_list.append(ResidualBlock(dim))
-        decoder_list = list(reversed(decoder_list))
-
-        self.encoder = nn.Sequential(*encoder_list)
+        self.encoder = nn.Sequential(nn.Conv2d(input_dim, dim, 4, 2, 1),
+                                     nn.ReLU(), nn.Conv2d(dim, dim, 4, 2, 1),
+                                     nn.ReLU(), nn.Conv2d(dim, dim, 3, 1, 1),
+                                     ResidualBlock(dim), ResidualBlock(dim))
         self.vq_embedding = nn.Embedding(n_embedding, dim)
-        self.decoder = nn.Sequential(*decoder_list)
-        self.n_downsample = n_downsample
+        self.vq_embedding.weight.data.uniform_(-1.0 / n_embedding,
+                                               1.0 / n_embedding)
+        self.decoder = nn.Sequential(
+            nn.Conv2d(dim, dim, 3, 1, 1),
+            ResidualBlock(dim), ResidualBlock(dim),
+            nn.ConvTranspose2d(dim, dim, 4, 2, 1), nn.ReLU(),
+            nn.ConvTranspose2d(dim, input_dim, 4, 2, 1))
+        self.n_downsample = 2
 
     def forward(self, x):
+        # encode
         ze = self.encoder(x)
-        embedding = self.vq_embedding.weight.data
 
         # ze: [N, C, H, W]
         # embedding [K, C]
+        embedding = self.vq_embedding.weight.data
         N, C, H, W = ze.shape
         K, _ = embedding.shape
         embedding_broadcast = embedding.reshape(1, K, C, 1, 1)
@@ -83,9 +50,11 @@ class VQVAE(nn.Module):
         distance = torch.sum((embedding_broadcast - ze_broadcast)**2, 2)
         nearest_neighbor = torch.argmin(distance, 1)
         # make C to the second dim
-        zq = embedding[nearest_neighbor].permute(0, 3, 1, 2)
+        zq = self.vq_embedding(nearest_neighbor).permute(0, 3, 1, 2)
         # stop gradient
         decoder_input = ze + (zq - ze).detach()
+
+        # decode
         x_hat = self.decoder(decoder_input)
         return x_hat, ze, zq
 

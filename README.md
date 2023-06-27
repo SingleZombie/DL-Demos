@@ -10,6 +10,7 @@ git clone https://github.com/SingleZombie/DL-Demos.git
 
 ```shell
 python setup.py develop
+pip install -r requirements.txt
 ```
 
 It is recommended to create a directory named `work_dirs` and put temporary results into it.
