@@ -10,6 +10,7 @@ git clone https://github.com/SingleZombie/DL-Demos.git
 
 ```shell
 python setup.py develop
+pip install -r requirements.txt
 ```
 
 It is recommended to create a directory named `work_dirs` and put temporary results into it.
@@ -44,6 +45,7 @@ Demos for deep learning.
 1. VAE with PyTorch
 2. DDPM with PyTorch
 3. PixelCNN with PyTorch
+4. VQVAE with PyTorch
 
 ## Others
 
