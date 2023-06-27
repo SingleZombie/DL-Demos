@@ -1,6 +1,6 @@
-from dldemos.pixelcnn.model import GatedPixelCNN, GatedBlock
-
 import torch.nn as nn
+
+from dldemos.pixelcnn.model import GatedBlock, GatedPixelCNN
 
 
 class PixelCNNWithEmbedding(GatedPixelCNN):

@@ -3,11 +3,11 @@
 
 import os
 import os.path as osp
-import lmdb
 import pickle
 
-from PIL import Image
+import lmdb
 import six
+from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -18,8 +18,8 @@ def raw_reader(path):
 
 
 def dumps_data(obj):
-    """
-    Serialize an object.
+    """Serialize an object.
+
     Returns:
         Implementation-dependent bytes-like object
     """
@@ -43,14 +43,14 @@ class MyImageFolder(Dataset):
 
 def folder2lmdb(img_dir, output_path, write_frequency=5000):
     directory = img_dir
-    print("Loading dataset from %s" % directory)
+    print('Loading dataset from %s' % directory)
     dataset = MyImageFolder(directory)
     data_loader = DataLoader(dataset, num_workers=16, collate_fn=lambda x: x)
 
     lmdb_path = output_path
     isdir = os.path.isdir(lmdb_path)
 
-    print("Generate LMDB to %s" % lmdb_path)
+    print('Generate LMDB to %s' % lmdb_path)
     db = lmdb.open(lmdb_path,
                    subdir=isdir,
                    map_size=1099511627776 * 2,
@@ -64,7 +64,7 @@ def folder2lmdb(img_dir, output_path, write_frequency=5000):
 
         txn.put(u'{}'.format(idx).encode('ascii'), dumps_data(image))
         if idx % write_frequency == 0:
-            print("[%d/%d]" % (idx, len(data_loader)))
+            print('[%d/%d]' % (idx, len(data_loader)))
             txn.commit()
             txn = db.begin(write=True)
 
@@ -75,7 +75,7 @@ def folder2lmdb(img_dir, output_path, write_frequency=5000):
         txn.put(b'__keys__', dumps_data(keys))
         txn.put(b'__len__', dumps_data(len(keys)))
 
-    print("Flushing database ...")
+    print('Flushing database ...')
     db.sync()
     db.close()
 

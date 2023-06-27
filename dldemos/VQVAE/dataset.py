@@ -1,12 +1,11 @@
-import torchvision
-
 import os
 
+import einops
+import torchvision
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
-import einops
 
 # Set this tp `True` and run this script to convert dataset to LMDB format
 TO_LMDB = False

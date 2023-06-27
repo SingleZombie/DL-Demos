@@ -3,14 +3,14 @@ import os
 import time
 
 import torch
-import torch.nn as nn
 import torch.distributed as dist
-
-from dldemos.VQVAE.model import VQVAE
-from dldemos.VQVAE.configs import get_cfg
-from dldemos.VQVAE.pixelcnn_model import PixelCNNWithEmbedding
-from dldemos.VQVAE.dataset import get_dataloader
+import torch.nn as nn
 from torch.nn.parallel import DistributedDataParallel
+
+from dldemos.VQVAE.configs import get_cfg
+from dldemos.VQVAE.dataset import get_dataloader
+from dldemos.VQVAE.model import VQVAE
+from dldemos.VQVAE.pixelcnn_model import PixelCNNWithEmbedding
 
 USE_LMDB = True
 

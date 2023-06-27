@@ -45,6 +45,7 @@ Demos for deep learning.
 1. VAE with PyTorch
 2. DDPM with PyTorch
 3. PixelCNN with PyTorch
+4. VQVAE with PyTorch
 
 ## Others
 

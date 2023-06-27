@@ -9,10 +9,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from dldemos.VQVAE.model import VQVAE
 from dldemos.VQVAE.configs import get_cfg
-from dldemos.VQVAE.pixelcnn_model import PixelCNNWithEmbedding
 from dldemos.VQVAE.dataset import get_dataloader
+from dldemos.VQVAE.model import VQVAE
+from dldemos.VQVAE.pixelcnn_model import PixelCNNWithEmbedding
 
 USE_LMDB = False
 
