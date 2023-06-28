@@ -113,12 +113,32 @@ celebahq_cfg3 = {
     'pe_dim': 128,
     'with_attn': [False, False, False, True, True]
 }
-configs = [mnist_cfg, celebahq_cfg1, celebahq_cfg2, celebahq_cfg3]
+celebahq_cfg4 = {
+    'dataset_type': 'CelebAHQ',
+    'model_path': 'dldemos/ddim/celebahq4.pth',
+    'batch_size': 64,
+    'n_epochs': 100,
+    'channels': [32, 64, 128, 256, 256],
+    'pe_dim': 128
+}
+celebahq_cfg5 = {
+    'dataset_type': 'CelebAHQ',
+    'model_path': 'dldemos/ddim/celebahq5.pth',
+    'batch_size': 64,
+    'n_epochs': 100,
+    'channels': [32, 64, 128, 256, 256],
+    'pe_dim': 128,
+    'with_attn': [False, False, False, True, True]
+}
+configs = [
+    mnist_cfg, celebahq_cfg1, celebahq_cfg2, celebahq_cfg3, celebahq_cfg4,
+    celebahq_cfg5
+]
 
 if __name__ == '__main__':
     os.makedirs('work_dirs', exist_ok=True)
 
-    config_id = 2
+    config_id = 5
     cfg = configs[config_id]
     n_steps = 1000
     device = 'cuda'
@@ -126,16 +146,17 @@ if __name__ == '__main__':
     img_shape = get_img_shape(cfg['dataset_type'])
     to_bgr = False if cfg['dataset_type'] == 'MNIST' else True
 
-    net = UNet(n_steps, img_shape, cfg['channels'], cfg['pe_dim'], cfg.get('with_attn', False))
+    net = UNet(n_steps, img_shape, cfg['channels'], cfg['pe_dim'],
+               cfg.get('with_attn', False))
     ddpm = DDPM(device, n_steps)
 
-    # train(ddpm,
-    #       net,
-    #       cfg['dataset_type'],
-    #       batch_size=cfg['batch_size'],
-    #       n_epochs=cfg['n_epochs'],
-    #       device=device,
-    #       ckpt_path=model_path)
+    train(ddpm,
+          net,
+          cfg['dataset_type'],
+          batch_size=cfg['batch_size'],
+          n_epochs=cfg['n_epochs'],
+          device=device,
+          ckpt_path=model_path)
 
     net.load_state_dict(torch.load(model_path))
     # sample_imgs(ddpm,
@@ -145,27 +166,27 @@ if __name__ == '__main__':
     #             device=device,
     #             to_bgr=to_bgr)
 
-    ddim = DDIM(device, n_steps)
-    sample_imgs(ddim,
-                net,
-                'work_dirs/diffusion_ddim_sigma_hat.jpg',
-                img_shape,
-                device=device,
-                simple_var=True,
-                to_bgr=to_bgr)
-    sample_imgs(ddim,
-                net,
-                'work_dirs/diffusion_ddim_eta_1.jpg',
-                img_shape,
-                device=device,
-                simple_var=False,
-                eta=1,
-                to_bgr=to_bgr)
-    sample_imgs(ddim,
-                net,
-                'work_dirs/diffusion_ddim_eta_0.jpg',
-                img_shape,
-                device=device,
-                simple_var=False,
-                eta=0,
-                to_bgr=to_bgr)
+    # ddim = DDIM(device, n_steps)
+    # sample_imgs(ddim,
+    #             net,
+    #             'work_dirs/diffusion_ddim_sigma_hat.jpg',
+    #             img_shape,
+    #             device=device,
+    #             simple_var=True,
+    #             to_bgr=to_bgr)
+    # sample_imgs(ddim,
+    #             net,
+    #             'work_dirs/diffusion_ddim_eta_1.jpg',
+    #             img_shape,
+    #             device=device,
+    #             simple_var=False,
+    #             eta=1,
+    #             to_bgr=to_bgr)
+    # sample_imgs(ddim,
+    #             net,
+    #             'work_dirs/diffusion_ddim_eta_0.jpg',
+    #             img_shape,
+    #             device=device,
+    #             simple_var=False,
+    #             eta=0,
+    #             to_bgr=to_bgr)

@@ -52,42 +52,61 @@ class ResBlock(nn.Module):
 
 class SelfAttentionBlock(nn.Module):
 
-    def __init__(self, dim: int):
+    def __init__(self, shape, dim):
         super().__init__()
 
-        self.dim = dim
-        self.d_model = dim
+        self.ln = nn.LayerNorm(shape)
         self.q = nn.Conv2d(dim, dim, 1)
         self.k = nn.Conv2d(dim, dim, 1)
         self.v = nn.Conv2d(dim, dim, 1)
         self.out = nn.Conv2d(dim, dim, 1)
 
     def forward(self, x):
-        
+
         n, c, h, w = x.shape
-        
-        
+
+        x = self.ln(x)
         q = self.q(x)
         k = self.k(x)
         v = self.v(x)
-        
+
         # n c h w -> n h*w c
         q = q.reshape(n, c, h * w)
         q = q.permute(0, 2, 1)
         # n c h w -> n c h*w
         k = k.reshape(n, c, h * w)
-        
-        qk = torch.bmm(q, k) / -c**0.5
+
+        qk = torch.bmm(q, k) / c**0.5
         qk = torch.softmax(qk, -1)
         # Now qk: [n, h*w, h*w]
-        
+
         qk = qk.permute(0, 2, 1)
-        v = v.reshape(n, c, h*w)
+        v = v.reshape(n, c, h * w)
         res = torch.bmm(v, qk)
         res = res.reshape(n, c, h, w)
         res = self.out(res)
-        
-        return res
+
+        return x + res
+
+
+class UNetLayer(nn.Module):
+
+    def __init__(self, in_channels, out_channels, h, w, with_attn=False):
+        super().__init__()
+        self.block1 = ResBlock((in_channels, h, w), in_channels, out_channels)
+        self.block2 = ResBlock((out_channels, h, w), out_channels,
+                               out_channels)
+        if with_attn:
+            self.attn = SelfAttentionBlock((out_channels, h, w), out_channels)
+        else:
+            self.attn = nn.Identity()
+
+    def forward(self, x, t):
+        x = self.block1(x)
+        x = x + t
+        x = self.block2(x)
+        x = self.attn(x)
+        return x
 
 
 class UNet(nn.Module):
@@ -112,7 +131,7 @@ class UNet(nn.Module):
             Ws.append(cW)
         if isinstance(with_attns, bool):
             with_attns = [with_attns] * layers
-        
+
         self.pe = PositionalEncoding(n_steps, pe_dim)
 
         self.encoders = nn.ModuleList()
@@ -122,41 +141,25 @@ class UNet(nn.Module):
         self.downs = nn.ModuleList()
         self.ups = nn.ModuleList()
         prev_channel = C
-        for channel, cH, cW, with_attn in zip(channels[0:-1], Hs[0:-1], Ws[0:-1], with_attns[0:-1]):
-            self.pe_linears_en.append(
-                nn.Sequential(nn.Linear(pe_dim, prev_channel), nn.ReLU(),
-                              nn.Linear(prev_channel, prev_channel)))
-            
-            blocks = [ResBlock((prev_channel, cH, cW), prev_channel, channel),
-                    ResBlock((channel, cH, cW), channel, channel)]
-            if with_attn:
-                blocks.append(SelfAttentionBlock(channel))
-            
+        for channel, cH, cW, with_attn in zip(channels[0:-1], Hs[0:-1],
+                                              Ws[0:-1], with_attns[0:-1]):
+            self.pe_linears_en.append(nn.Linear(pe_dim, channel))
+
             self.encoders.append(
-                nn.Sequential(*blocks))
+                UNetLayer(prev_channel, channel, cH, cW, with_attn))
             self.downs.append(nn.Conv2d(channel, channel, 2, 2))
             prev_channel = channel
 
-        self.pe_mid = nn.Linear(pe_dim, prev_channel)
-        channel = channels[-1]
-        
-        blocks = [ResBlock((prev_channel, Hs[-1], Ws[-1]), prev_channel, channel),
-            ResBlock((channel, Hs[-1], Ws[-1]), channel, channel)]
-        if with_attns[-1]:
-            blocks.append(SelfAttentionBlock(channel))
-        
-        self.mid = nn.Sequential(*blocks)
-        prev_channel = channel
-        for channel, cH, cW, with_attn in zip(channels[-2::-1], Hs[-2::-1], Ws[-2::-1], with_attns[-2::-1]):
-            self.pe_linears_de.append(nn.Linear(pe_dim, prev_channel))
+        self.pe_mid = nn.Linear(pe_dim, channels[-1])
+        self.mid = UNetLayer(prev_channel, channels[-1], Hs[-1], Ws[-1],
+                             with_attns[-1])
+        prev_channel = channels[-1]
+        for channel, cH, cW, with_attn in zip(channels[-2::-1], Hs[-2::-1],
+                                              Ws[-2::-1], with_attns[-2::-1]):
+            self.pe_linears_de.append(nn.Linear(pe_dim, channel))
             self.ups.append(nn.ConvTranspose2d(prev_channel, channel, 2, 2))
-            
-            blocks = [ResBlock((channel * 2, cH, cW), channel * 2, channel),
-                    ResBlock((channel, cH, cW), channel, channel)]
-            if with_attn:
-                blocks.append(SelfAttentionBlock(channel))
             self.decoders.append(
-                nn.Sequential(*blocks))
+                UNetLayer(channel * 2, channel, cH, cW, with_attn))
 
             prev_channel = channel
 
@@ -169,11 +172,11 @@ class UNet(nn.Module):
         for pe_linear, encoder, down in zip(self.pe_linears_en, self.encoders,
                                             self.downs):
             pe = pe_linear(t).reshape(n, -1, 1, 1)
-            x = encoder(x + pe)
+            x = encoder(x, pe)
             encoder_outs.append(x)
             x = down(x)
         pe = self.pe_mid(t).reshape(n, -1, 1, 1)
-        x = self.mid(x + pe)
+        x = self.mid(x, pe)
         for pe_linear, decoder, up, encoder_out in zip(self.pe_linears_de,
                                                        self.decoders, self.ups,
                                                        encoder_outs[::-1]):
@@ -185,6 +188,6 @@ class UNet(nn.Module):
             x = F.pad(x, (pad_x // 2, pad_x - pad_x // 2, pad_y // 2,
                           pad_y - pad_y // 2))
             x = torch.cat((encoder_out, x), dim=1)
-            x = decoder(x + pe)
+            x = decoder(x, pe)
         x = self.conv_out(x)
         return x
