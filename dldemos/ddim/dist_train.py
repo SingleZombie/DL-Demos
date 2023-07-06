@@ -1,3 +1,4 @@
+import argparse
 import os
 import time
 
@@ -6,11 +7,10 @@ import torch.distributed as dist
 import torch.nn as nn
 from torch.nn.parallel import DistributedDataParallel
 
-from dldemos.ddim.dataset import get_dataloader
 from dldemos.ddim.configs import configs
+from dldemos.ddim.dataset import get_dataloader
 from dldemos.ddim.ddpm import DDPM
 from dldemos.ddim.network import UNet
-import argparse
 
 
 def reduce_sum(tensor):
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     net = DistributedDataParallel(net, device_ids=[device])
     ddpm = DDPM(device, n_steps)
 
-    #Optional: resume
+    # Optional: resume
     # map_location = {'cuda:0': f'cuda:{device}'}
     # resume_path = model_path
     # state_dict = torch.load(resume_path, map_location=map_location)

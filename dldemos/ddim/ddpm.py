@@ -34,7 +34,7 @@ class DDPM():
         else:
             x = torch.randn(img_or_shape).to(device)
         net = net.to(device)
-        for t in tqdm(range(self.n_steps - 1, -1, -1), "DDPM sampling"):
+        for t in tqdm(range(self.n_steps - 1, -1, -1), 'DDPM sampling'):
             x = self.sample_backward_step(x, t, net, simple_var)
 
         return x

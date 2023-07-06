@@ -1,17 +1,16 @@
+import argparse
 import os
 
+import cv2
+import einops
 import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 
 from dldemos.ddim.configs import configs
-from dldemos.ddim.ddpm import DDPM
 from dldemos.ddim.ddim import DDIM
+from dldemos.ddim.ddpm import DDPM
 from dldemos.ddim.network import UNet
-import argparse
-
-import cv2
-import einops
 
 
 def sample_imgs(ddpm,
@@ -112,4 +111,5 @@ if __name__ == '__main__':
 
     dist.destroy_process_group()
 
-# torchrun --nproc_per_node=8 dldemos/ddim/dist_sample.py -c 2 > work_dirs/tmp.txt
+# torchrun --nproc_per_node=8 dldemos/ddim/dist_sample.py -c 2 \
+#   > work_dirs/tmp.txt

@@ -1,9 +1,10 @@
+import os
+
 import torchvision
 from PIL import Image
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
-import os
 
 CELEBA_HQ_DIR = 'data/celebA/celeba_hq_256'
 

@@ -152,7 +152,7 @@ class UNet(nn.Module):
             self.downs.append(nn.Conv2d(channel, channel, 2, 2))
             prev_channel = channel
 
-        self.pe_mid = nn.Sequential(nn.Linear(pe_dim, channels[-1]), 
+        self.pe_mid = nn.Sequential(nn.Linear(pe_dim, channels[-1]),
                                     nn.Linear(channels[-1], channels[-1]))
         self.mid = UNetLayer(prev_channel, channels[-1], Hs[-1], Ws[-1],
                              with_attns[-1])
