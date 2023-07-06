@@ -13,7 +13,7 @@ class DDIM(DDPM):
         super().__init__(device, n_steps, min_beta, max_beta)
 
     def sample_backward(self,
-                        img_shape,
+                        img_or_shape,
                         net,
                         device,
                         simple_var=True,
@@ -21,12 +21,16 @@ class DDIM(DDPM):
                         eta=1):
         if simple_var:
             eta = 1
-        batch_size = img_shape[0]
         ts = torch.linspace(self.n_steps, 0,
                             (ddim_step + 1)).to(device).to(torch.long)
-        x = torch.randn(img_shape).to(device)
+        if isinstance(img_or_shape, torch.Tensor):
+            x = img_or_shape
+        else:
+            x = torch.randn(img_or_shape).to(device)
+        batch_size = x.shape[0]
         net = net.to(device)
-        for i in tqdm(range(1, ddim_step + 1), f'DDIM sampling with eta {eta} simple_var {simple_var}'):
+        for i in tqdm(range(1, ddim_step + 1),
+                      f'DDIM sampling with eta {eta} simple_var {simple_var}'):
             cur_t = ts[i - 1] - 1
             prev_t = ts[i] - 1
 

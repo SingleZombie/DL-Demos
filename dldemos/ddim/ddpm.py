@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm
 
+
 class DDPM():
 
     def __init__(self,
@@ -27,12 +28,37 @@ class DDPM():
         res = eps * torch.sqrt(1 - alpha_bar) + torch.sqrt(alpha_bar) * x
         return res
 
-    def sample_backward(self, img_shape, net, device, simple_var=True):
-        x = torch.randn(img_shape).to(device)
+    def sample_backward(self, img_or_shape, net, device, simple_var=True):
+        if isinstance(img_or_shape, torch.Tensor):
+            x = img_or_shape
+        else:
+            x = torch.randn(img_or_shape).to(device)
         net = net.to(device)
         for t in tqdm(range(self.n_steps - 1, -1, -1), "DDPM sampling"):
             x = self.sample_backward_step(x, t, net, simple_var)
+
         return x
+
+    def sample_backward_intermediate(self,
+                                     img_or_shape,
+                                     intermediate_timesteps,
+                                     net,
+                                     device,
+                                     simple_var=True):
+        if isinstance(img_or_shape, torch.Tensor):
+            x = img_or_shape
+        else:
+            x = torch.randn(img_or_shape).to(device)
+        net = net.to(device)
+        index = 0
+        res = []
+        for t in tqdm(range(self.n_steps - 1, -1, -1), "DDPM sampling"):
+            x = self.sample_backward_step(x, t, net, simple_var)
+            if t / self.n_steps >= intermediate_timesteps[index]:
+                res.append(x)
+                index += 1
+
+        return res
 
     def sample_backward_step(self, x_t, t, net, simple_var=True):
 

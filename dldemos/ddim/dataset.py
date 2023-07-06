@@ -37,18 +37,20 @@ class MNISTImageDataset(Dataset):
 
     def __getitem__(self, index: int):
         img = self.mnist[index][0]
-        pipeline = transforms.Compose(
-            [transforms.ToTensor(), 
-             transforms.Lambda(lambda x: (x - 0.5) * 2)])
+        pipeline = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Lambda(lambda x: (x - 0.5) * 2)
+        ])
         return pipeline(img)
 
 
 class CelebADataset(Dataset):
 
-    def __init__(self, root):
+    def __init__(self, root, resolution=(64, 64)):
         super().__init__()
         self.root = root
         self.filenames = sorted(os.listdir(root))
+        self.resolution = resolution
 
     def __len__(self) -> int:
         return len(self.filenames)
@@ -56,18 +58,24 @@ class CelebADataset(Dataset):
     def __getitem__(self, index: int):
         path = os.path.join(self.root, self.filenames[index])
         img = Image.open(path)
-        pipeline = transforms.Compose(
-            [transforms.ToTensor(),
-             transforms.Lambda(lambda x: (x - 0.5) * 2)])
+        pipeline = transforms.Compose([
+            transforms.Resize(self.resolution),
+            transforms.ToTensor(),
+            transforms.Lambda(lambda x: (x - 0.5) * 2)
+        ])
         return pipeline(img)
 
 
 def get_dataloader(type,
                    batch_size,
                    dist_train=False,
-                   num_workers=4):
+                   num_workers=4,
+                   resolution=None):
     if type == 'CelebAHQ':
-        dataset = CelebADataset(CELEBA_HQ_DIR)
+        if resolution is not None:
+            dataset = CelebADataset(CELEBA_HQ_DIR, resolution)
+        else:
+            dataset = CelebADataset(CELEBA_HQ_DIR)
     elif type == 'MNIST':
         dataset = MNISTImageDataset()
     if dist_train:
@@ -85,14 +93,6 @@ def get_dataloader(type,
         return dataloader
 
 
-def get_img_shape(dataset_type):
-    if dataset_type == 'MNIST':
-        return (1, 28, 28)
-    elif dataset_type == 'CelebAHQ':
-        return (3, 256, 256)
-
-
 if __name__ == '__main__':
-    import os
     os.makedirs('work_dirs', exist_ok=True)
     download_dataset()
