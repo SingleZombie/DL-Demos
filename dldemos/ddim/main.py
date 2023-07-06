@@ -113,6 +113,7 @@ def sample_imgs(ddpm,
 if __name__ == '__main__':
     os.makedirs('work_dirs', exist_ok=True)
 
+    # 0 for MNIST. See configs.py
     config_id = 0
     cfg = configs[config_id]
     n_steps = 1000
@@ -122,7 +123,7 @@ if __name__ == '__main__':
     to_bgr = False if cfg['dataset_type'] == 'MNIST' else True
 
     net = UNet(n_steps, img_shape, cfg['channels'], cfg['pe_dim'],
-               cfg.get('with_attn', False), cfg.get('norm_type', 'fn'))
+               cfg.get('with_attn', False), cfg.get('norm_type', 'ln'))
     ddpm = DDPM(device, n_steps)
 
     train(ddpm,

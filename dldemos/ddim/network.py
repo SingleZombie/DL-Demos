@@ -145,16 +145,17 @@ class ResAttnBlockMid(nn.Module):
 
     def __init__(self,
                  shape,
+                 in_c,
                  out_c,
                  time_c,
                  with_attn,
                  norm_type='ln',
                  activation_type='silu'):
         super().__init__()
-        self.res_block1 = ResBlock(shape, out_c, out_c, time_c, norm_type,
+        self.res_block1 = ResBlock(shape, in_c, out_c, time_c, norm_type,
                                    activation_type)
-        self.res_block2 = ResBlock(shape, out_c, out_c, time_c, norm_type,
-                                   activation_type)
+        self.res_block2 = ResBlock((out_c, shape[1], shape[2]), out_c, out_c,
+                                   time_c, norm_type, activation_type)
         if with_attn:
             self.attn_block = SelfAttentionBlock((out_c, shape[1], shape[2]),
                                                  out_c, norm_type)
@@ -224,8 +225,9 @@ class UNet(nn.Module):
         cH = Hs[-1]
         cW = Ws[-1]
         channel = channels[-1]
-        self.mid = ResAttnBlockMid((prev_channel, cH, cW), channel, time_c,
-                                   with_attns[-1], norm_type, activation_type)
+        self.mid = ResAttnBlockMid((prev_channel, cH, cW), prev_channel,
+                                   channel, time_c, with_attns[-1], norm_type,
+                                   activation_type)
 
         prev_channel = channel
         for channel, cH, cW, with_attn in zip(channels[-2::-1], Hs[-2::-1],
