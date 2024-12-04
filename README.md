@@ -52,3 +52,4 @@ Demos for deep learning.
 
 1. Style Transfer with PyTorch
 2. PyTorch DDP Demo
+3. Fourier Feature
